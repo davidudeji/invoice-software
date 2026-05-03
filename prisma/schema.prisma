@@ -1,42 +1,42 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
-
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  password      String?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  settings      Settings?
-  clients       Client[]
-  products      Product[]
-  invoices      Invoice[]
-  taxRates      TaxRate[]
-  paymentMethods PaymentMethod[]
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  password  String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings       Settings?
+  clients        Client[]
+  products       Product[]
+  invoices       Invoice[]
+  taxRates       TaxRate[]
+  paymentMethods PaymentType[]
 }
 
 model Settings {
-  id            String  @id @default(cuid())
-  userId        String  @unique
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  businessName  String?
-  logoUrl       String?
-  address       String?
-  email         String?
-  phone         String?
-  website       String?
-  taxId         String?
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessName String?
+  logoUrl      String?
+  address      String?
+  email        String?
+  phone        String?
+  website      String?
+  taxId        String?
+
   currency      String  @default("USD")
   dateFormat    String  @default("MM/DD/YYYY")
   timezone      String  @default("UTC")
@@ -46,37 +46,40 @@ model Settings {
 }
 
 model TaxRate {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   name        String
   rate        Float
   description String?
-  isDefault   Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isDefault   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model PaymentMethod {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  name        String
-  details     String?  // Bank details or instructions
-  isDefault   Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Payment {
+  id              String        @id @default(cuid())
+  invoiceId       String
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  stripeSessionId String?       @unique
+  amount          Decimal       @db.Decimal(10, 2)
+  status          PaymentStatus @default(PENDING)
+  paymentDate     DateTime      @default(now())
+  paymentMethod   PaymentType   @default(CASH)
+  transactionId   String?
+  notes           String?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Client {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   name        String
   email       String
   phone       String?
@@ -85,63 +88,88 @@ model Client {
   website     String?
   taxId       String?
   notes       String?
-  tags        String?  // Simple comma-separated string for MVP
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  invoices    Invoice[]
+  tags        String? // Simple comma-separated string for MVP
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices Invoice[]
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   name        String
   description String?
   price       Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   invoiceItems InvoiceItem[]
 }
 
 model Invoice {
-  id             String        @id @default(cuid())
-  userId         String
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clientId       String
-  client         Client        @relation(fields: [clientId], references: [id])
-  
-  number         String
-  date           DateTime      @default(now())
-  dueDate        DateTime
-  status         String        @default("PENDING") // PENDING, PAID, OVERDUE, DRAFT
-  
-  subtotal       Float
-  taxAmount      Float
-  total          Float
-  
-  paymentTerms   String?
-  notes          String?
-  
-  items          InvoiceItem[]
-  
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  number  String
+  date    DateTime @default(now())
+  dueDate DateTime
+  status  String   @default("PENDING") // PENDING, PAID, OVERDUE, DRAFT
+
+  subtotal  Float
+  taxAmount Float
+  total     Float
+
+  paymentTerms String?
+  notes        String?
+
+  items InvoiceItem[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  payments  Payment[]
 }
 
 model InvoiceItem {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  
-  productId   String?
-  product     Product? @relation(fields: [productId], references: [id])
-  
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
   description String
   quantity    Int
   price       Float
   total       Float
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  CASH
+  CARD
+  BANK_TRANSFER
+  CHEQUE
+  OTHER
 }
