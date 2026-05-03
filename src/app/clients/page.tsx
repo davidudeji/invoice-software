@@ -8,14 +8,15 @@ import { Plus, Search } from 'lucide-react';
 export default async function ClientsPage({
     searchParams,
 }: {
-    searchParams?: { query?: string };
+    searchParams?: Promise<{ query?: string }>;
 }) {
     const session = await auth();
     if (!session?.user?.id) {
         redirect('/login');
     }
 
-    const query = searchParams?.query || '';
+    const params = await searchParams;
+    const query = params?.query || '';
 
     const clients = await prisma.client.findMany({
         where: {
