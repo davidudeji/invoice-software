@@ -7,15 +7,19 @@ import {
   Users,
   Settings,
   BarChart3,
-  ShoppingCart,
   Tag,
   LogOut,
   Zap,
   ChevronRight,
+  Shield,
+  TrendingUp,
+  X,
+  Menu,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useState } from "react";
 
 const navGroups = [
   {
@@ -28,7 +32,7 @@ const navGroups = [
     label: "Business",
     items: [
       { icon: FileText, label: "Invoices", href: "/invoices" },
-      { icon: ShoppingCart, label: "Sales", href: "/sales" },
+      { icon: TrendingUp, label: "Sales", href: "/sales" },
       { icon: Users, label: "Clients", href: "/clients" },
     ],
   },
@@ -48,6 +52,7 @@ const navGroups = [
   {
     label: "System",
     items: [
+      { icon: Shield, label: "Audit Log", href: "/audit" },
       { icon: Settings, label: "Settings", href: "/settings" },
     ],
   },
@@ -56,14 +61,15 @@ const navGroups = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
-  return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white z-50 flex flex-col border-r border-slate-800/80">
+  const SidebarContent = () => (
+    <aside className="h-full w-64 bg-slate-900 text-white flex flex-col border-r border-slate-800/80">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-slate-800/80">
+      <div className="px-5 py-5 border-b border-slate-800/80 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/25">
             <Zap size={16} className="text-white" />
@@ -72,6 +78,12 @@ export function AppSidebar() {
             Invoice<span className="text-indigo-400">Pay</span>
           </h1>
         </div>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden p-1 text-slate-400 hover:text-white"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Nav */}
@@ -89,6 +101,7 @@ export function AppSidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => setMobileOpen(false)}
                     className={`
                       group flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium
                       transition-all duration-150
@@ -140,5 +153,35 @@ export function AppSidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Mobile toggle button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 z-40 md:hidden p-2 bg-slate-900 text-white rounded-xl shadow-lg"
+      >
+        <Menu size={18} />
+      </button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <div className={`fixed left-0 top-0 h-full z-50 md:hidden transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <SidebarContent />
+      </div>
+
+      {/* Desktop fixed sidebar */}
+      <div className="fixed left-0 top-0 h-full hidden md:block z-50">
+        <SidebarContent />
+      </div>
+    </>
   );
 }

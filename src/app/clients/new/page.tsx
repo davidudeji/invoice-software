@@ -1,92 +1,103 @@
-
 'use client';
 
-import { useFormState } from 'react-dom';
-import { createClient, State } from '@/app/actions/clients';
+import { useActionState } from 'react';
+import { createClient } from '@/app/actions/clients';
+import { AppSidebar } from '@/components/Layout/AppSidebar';
 import { SubmitButton } from '@/components/SubmitButton';
 import Link from 'next/link';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
+
+const initialState = { message: null, errors: {} };
+
+const inputClass =
+  'w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-white';
+const labelClass =
+  'block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5';
 
 export default function NewClientPage() {
-    const initialState: State = { message: null, errors: {} };
-    const [state, formAction] = useFormState(createClient, initialState);
+  const [state, formAction] = useActionState(createClient, initialState);
 
-    return (
-        <div className="max-w-2xl mx-auto p-6">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900">New Client</h1>
-                <p className="text-slate-500 mt-2">Add a new client to your database.</p>
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans">
+      <AppSidebar />
+      <main className="pl-64 min-h-screen">
+        <div className="max-w-2xl mx-auto p-8 space-y-6 page-enter">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/clients"
+              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-xl transition-colors"
+            >
+              <ArrowLeft size={18} />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">New Client</h1>
+              <p className="text-slate-500 text-sm">Add a client to start creating invoices for them</p>
+            </div>
+          </div>
+
+          {state?.message && !state.success && (
+            <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+              <AlertCircle size={16} className="flex-shrink-0" />
+              {state.message}
+            </div>
+          )}
+
+          <form action={formAction} className="card p-6 space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="sm:col-span-2">
+                <label htmlFor="client-name" className={labelClass}>Full Name *</label>
+                <input id="client-name" name="name" type="text" required placeholder="Jane Smith" className={inputClass} />
+                {state?.errors?.name && <p className="mt-1 text-xs text-red-500">{state.errors.name[0]}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="client-company" className={labelClass}>Company Name</label>
+                <input id="client-company" name="companyName" type="text" placeholder="Acme Corp" className={inputClass} />
+              </div>
+
+              <div>
+                <label htmlFor="client-email" className={labelClass}>Email Address *</label>
+                <input id="client-email" name="email" type="email" required placeholder="jane@example.com" className={inputClass} />
+                {state?.errors?.email && <p className="mt-1 text-xs text-red-500">{state.errors.email[0]}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="client-phone" className={labelClass}>Phone</label>
+                <input id="client-phone" name="phone" type="tel" placeholder="+1 555 000 0000" className={inputClass} />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="client-address" className={labelClass}>Address</label>
+                <textarea id="client-address" name="address" rows={2} placeholder="123 Main St, New York, NY 10001" className={`${inputClass} resize-none`} />
+              </div>
+
+              <div>
+                <label htmlFor="client-website" className={labelClass}>Website</label>
+                <input id="client-website" name="website" type="text" placeholder="https://example.com" className={inputClass} />
+              </div>
+
+              <div>
+                <label htmlFor="client-taxid" className={labelClass}>Tax ID / VAT</label>
+                <input id="client-taxid" name="taxId" type="text" placeholder="US-123456789" className={inputClass} />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label htmlFor="client-notes" className={labelClass}>Internal Notes</label>
+                <textarea id="client-notes" name="notes" rows={2} placeholder="Optional internal notes about this client…" className={`${inputClass} resize-none`} />
+              </div>
             </div>
 
-            <form action={formAction} className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl p-8 space-y-6">
-                <div className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-
-                    <div className="sm:col-span-2">
-                        <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">Client Name *</label>
-                        <div className="mt-2">
-                            <input type="text" name="name" id="name" required className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                        {state.errors?.name && <p className="mt-2 text-sm text-red-500">{state.errors.name}</p>}
-                    </div>
-
-                    <div className="sm:col-span-2">
-                        <label htmlFor="companyName" className="block text-sm font-medium leading-6 text-gray-900">Company Name</label>
-                        <div className="mt-2">
-                            <input type="text" name="companyName" id="companyName" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-
-                    <div className="sm:col-span-1">
-                        <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">Email *</label>
-                        <div className="mt-2">
-                            <input type="email" name="email" id="email" required className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                        {state.errors?.email && <p className="mt-2 text-sm text-red-500">{state.errors.email}</p>}
-                    </div>
-
-                    <div className="sm:col-span-1">
-                        <label htmlFor="phone" className="block text-sm font-medium leading-6 text-gray-900">Phone</label>
-                        <div className="mt-2">
-                            <input type="tel" name="phone" id="phone" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                        <label htmlFor="address" className="block text-sm font-medium leading-6 text-gray-900">Address</label>
-                        <div className="mt-2">
-                            <textarea name="address" id="address" rows={3} className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-
-                    <div className="sm:col-span-1">
-                        <label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900">Website</label>
-                        <div className="mt-2">
-                            <input type="text" name="website" id="website" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-
-                    <div className="sm:col-span-1">
-                        <label htmlFor="taxId" className="block text-sm font-medium leading-6 text-gray-900">Tax ID</label>
-                        <div className="mt-2">
-                            <input type="text" name="taxId" id="taxId" className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                        <label htmlFor="notes" className="block text-sm font-medium leading-6 text-gray-900">Internal Notes</label>
-                        <div className="mt-2">
-                            <textarea name="notes" id="notes" rows={2} className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="pt-4 flex items-center justify-end gap-x-6">
-                    <Link href="/clients" className="text-sm font-semibold leading-6 text-gray-900">Cancel</Link>
-                    <SubmitButton text="Create Client" loadingText="Creating..." />
-                </div>
-                {state.message && (
-                    <p className="mt-2 text-sm text-red-500">{state.message}</p>
-                )}
-            </form>
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+              <Link href="/clients" className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                Cancel
+              </Link>
+              <SubmitButton pendingLabel="Creating…">
+                Create Client
+              </SubmitButton>
+            </div>
+          </form>
         </div>
-    );
+      </main>
+    </div>
+  );
 }
