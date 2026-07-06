@@ -1,153 +1,15 @@
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String?  @unique
-  password  String?
-  image     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  settings       Settings?
-  clients        Client[]
-  products       Product[]
-  invoices       Invoice[]
-  taxRates       TaxRate[]
-  paymentMethods PaymentType[]
-}
-
-model Settings {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  businessName String?
-  logoUrl      String?
-  address      String?
-  email        String?
-  phone        String?
-  website      String?
-  taxId        String?
-
-  currency      String  @default("USD")
-  dateFormat    String  @default("MM/DD/YYYY")
-  timezone      String  @default("UTC")
-  taxRate       Float   @default(0) // Kept for backward compatibility or simple use cases
-  invoicePrefix String  @default("INV-")
-  invoiceFooter String?
-}
-
-model TaxRate {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name        String
-  rate        Float
-  description String?
-  isDefault   Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Payment {
-  id              String        @id @default(cuid())
-  invoiceId       String
-  invoice         Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  stripeSessionId String?       @unique
-  amount          Decimal       @db.Decimal(10, 2)
-  status          PaymentStatus @default(PENDING)
-  paymentDate     DateTime      @default(now())
-  paymentMethod   PaymentType   @default(CASH)
-  transactionId   String?
-  notes           String?
-  paidAt          DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model Client {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name        String
-  email       String
-  phone       String?
-  companyName String?
-  address     String?
-  website     String?
-  taxId       String?
-  notes       String?
-  tags        String? // Simple comma-separated string for MVP
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  invoices Invoice[]
-}
-
-model Product {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name        String
-  description String?
-  price       Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  invoiceItems InvoiceItem[]
-}
-
-model Invoice {
-  id       String @id @default(cuid())
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clientId String
-  client   Client @relation(fields: [clientId], references: [id])
-
-  number  String
-  date    DateTime @default(now())
-  dueDate DateTime
-  status  String   @default("PENDING") // PENDING, PAID, OVERDUE, DRAFT
-
-  subtotal  Float
-  taxAmount Float
-  total     Float
-
-  paymentTerms String?
-  notes        String?
-
-  items InvoiceItem[]
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  payments  Payment[]
-}
-
-model InvoiceItem {
-  id        String  @id @default(cuid())
-  invoiceId String
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  productId String?
-  product   Product? @relation(fields: [productId], references: [id])
-
-  description String
-  quantity    Int
-  price       Float
-  total       Float
-}
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
 
 enum InvoiceStatus {
   DRAFT
@@ -165,10 +27,299 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum PaymentType {
-  CASH
-  CARD
-  BANK_TRANSFER
-  CHEQUE
-  OTHER
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum AuditTarget {
+  INVOICE
+  PRODUCT
+  CATEGORY
+  CLIENT
+  SETTINGS
+  PAYMENT
+  SALE
+}
+
+// ─────────────────────────────────────────────
+// USER / ORGANIZATION
+// ─────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  password  String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings       Settings?
+  clients        Client[]
+  products       Product[]
+  categories     Category[]
+  invoices       Invoice[]
+  taxRates       TaxRate[]
+  paymentMethods PaymentMethod[]
+  sales          Sale[]
+  auditLogs      AuditLog[]
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS / ORGANIZATION PROFILE
+// ─────────────────────────────────────────────
+
+model Settings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessName  String?
+  logoUrl       String?
+  address       String?
+  email         String?
+  phone         String?
+  website       String?
+  taxId         String?
+
+  currency      String  @default("USD")
+  dateFormat    String  @default("MM/DD/YYYY")
+  timezone      String  @default("UTC")
+  invoicePrefix String  @default("INV-")
+  invoiceFooter String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// TAX RATES
+// ─────────────────────────────────────────────
+
+model TaxRate {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  rate        Float
+  description String?
+  isDefault   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// PAYMENT METHODS (custom, per user)
+// ─────────────────────────────────────────────
+
+model PaymentMethod {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  details   String?
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// CATEGORIES
+// ─────────────────────────────────────────────
+
+model Category {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  color       String  @default("#6366f1") // hex color for UI badge
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// PRODUCTS
+// ─────────────────────────────────────────────
+
+model Product {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  name          String
+  description   String?
+  sku           String?
+  price         Float
+  stockQuantity Int     @default(0)
+  imageUrl      String?
+  isActive      Boolean @default(true)
+
+  invoiceItems InvoiceItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([sku])
+}
+
+// ─────────────────────────────────────────────
+// CLIENTS
+// ─────────────────────────────────────────────
+
+model Client {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  email       String
+  phone       String?
+  companyName String?
+  address     String?
+  website     String?
+  taxId       String?
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices Invoice[]
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────
+// INVOICES
+// ─────────────────────────────────────────────
+
+model Invoice {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  number       String
+  status       InvoiceStatus @default(DRAFT)
+  date         DateTime      @default(now())
+  dueDate      DateTime
+  sentAt       DateTime?
+  paidAt       DateTime?
+
+  subtotal   Float
+  taxAmount  Float  @default(0)
+  total      Float
+  taxRate    Float  @default(0) // percentage applied at time of creation
+
+  paymentTerms         String?
+  notes                String?
+  stripePaymentIntentId String?
+
+  items    InvoiceItem[]
+  payments Payment[]
+  sale     Sale?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([clientId])
+}
+
+// ─────────────────────────────────────────────
+// INVOICE ITEMS (line items)
+// ─────────────────────────────────────────────
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  description    String
+  quantity       Int
+  unitPrice      Float  // snapshot price at time of invoice creation
+  total          Float  // quantity * unitPrice
+
+  @@index([invoiceId])
+}
+
+// ─────────────────────────────────────────────
+// PAYMENTS
+// ─────────────────────────────────────────────
+
+model Payment {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  stripeSessionId String?       @unique
+  amount          Float
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   String?       // free text: "card", "bank transfer", etc.
+  transactionId   String?
+  notes           String?
+  paidAt          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// SALES LEDGER
+// ─────────────────────────────────────────────
+
+model Sale {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId String @unique
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  totalAmount Float
+  saleDate    DateTime @default(now())
+  notes       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([saleDate])
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action   AuditAction
+  target   AuditTarget
+  targetId String
+  summary  String       // human-readable description of what changed
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }

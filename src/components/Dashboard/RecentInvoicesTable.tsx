@@ -19,7 +19,7 @@ export function RecentInvoicesTable() {
                     <ArrowUpRight size={24} className="text-slate-300" />
                 </div>
                 <h3 className="text-slate-900 font-medium mb-1">No invoices yet</h3>
-                <p className="text-slate-500 text-sm mb-4">Create your first invoice to get started.</p>
+                <p className="text-slate-500 text-sm mb-4">Create your first invoice to get started now.</p>
                 <Link href="/invoices/new" className="text-indigo-600 text-sm font-semibold hover:underline">
                     Create Invoice &rarr;
                 </Link>

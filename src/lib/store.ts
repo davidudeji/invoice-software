@@ -1,226 +1,177 @@
 import { create } from 'zustand';
-import { Invoice, Client, PurchaseOrder, Product, Category, CartItem, Ebook } from '@/types';
+import { InvoiceBuilderItem, InvoiceBuilderState, ProductFilterState, InvoiceFilterState } from '@/types';
 
-interface InvoiceState {
-    invoices: Invoice[];
-    clients: Client[];
-    purchaseOrders: PurchaseOrder[];
-    products: Product[];
-    categories: Category[];
-    cart: CartItem[];
-    ebooks: Ebook[];
+// ─────────────────────────────────────────────
+// INVOICE BUILDER STORE
+// Ephemeral state for the in-flight invoice creation form.
+// Cleared on submit / navigation away.
+// ─────────────────────────────────────────────
 
-    // Actions
-    addInvoice: (invoice: Invoice) => void;
-    updateInvoice: (id: string, invoice: Partial<Invoice>) => void;
-    deleteInvoice: (id: string) => void;
-    addClient: (client: Client) => void;
+interface InvoiceBuilderStore extends InvoiceBuilderState {
+  // Setters
+  setClientId: (clientId: string) => void;
+  setDate: (date: string) => void;
+  setDueDate: (dueDate: string) => void;
+  setTaxRate: (rate: number) => void;
+  setNotes: (notes: string) => void;
+  setPaymentTerms: (terms: string) => void;
 
-    // Ebook Actions
-    addEbook: (ebook: Ebook) => void;
-    updateEbook: (id: string, ebook: Partial<Ebook>) => void;
-    deleteEbook: (id: string) => void;
+  // Line item actions
+  addItem: () => void;
+  removeItem: (id: string) => void;
+  updateItem: (id: string, updates: Partial<InvoiceBuilderItem>) => void;
 
-    // Inventory Actions
-    addProduct: (product: Product) => void;
-    updateProduct: (id: string, product: Partial<Product>) => void;
-    deleteProduct: (id: string) => void;
+  // OCR autofill
+  autofillFromOCR: (data: Partial<InvoiceBuilderState>) => void;
 
-    // Cart Actions
-    addToCart: (item: CartItem) => void;
-    removeFromCart: (productId: string) => void;
-    updateCartQuantity: (productId: string, quantity: number) => void;
-    clearCart: () => void;
-
-    // Advanced Actions
-    autoMatchInvoice: (invoiceId: string) => void;
-    submitForApproval: (invoiceId: string) => void;
-    approveInvoice: (invoiceId: string) => void;
-    rejectInvoice: (invoiceId: string) => void;
-
-    // Computed (getters)
-    getStats: () => {
-        totalRevenue: number;
-        pendingCount: number;
-        pendingAmount: number;
-        paidCount: number;
-        approvalPendingCount: number;
-    };
+  // Reset
+  reset: () => void;
 }
 
-// Mock Data for specific clients
-const INITIAL_CLIENTS: Client[] = [
-    { id: 'c1', name: 'Acme Corp', email: 'billing@acme.com', address: '123 Acme Way' },
-    { id: 'c2', name: 'Globex Inc', email: 'accounts@globex.com', address: '456 Globex St' },
-    { id: 'c3', name: 'Soylent Corp', email: 'finance@soylent.com', address: '789 People Place' },
-];
+function computeTotals(items: InvoiceBuilderItem[], taxRate: number) {
+  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount;
+  return { subtotal, taxAmount, total };
+}
 
-const INITIAL_POS: PurchaseOrder[] = [
-    { id: 'po1', number: 'PO-001', vendorId: 'c1', totalAmount: 5000, status: 'open', createdAt: new Date().toISOString() },
-    { id: 'po2', number: 'PO-002', vendorId: 'c2', totalAmount: 1200, status: 'open', createdAt: new Date().toISOString() },
-];
+function newItem(): InvoiceBuilderItem {
+  return {
+    id: crypto.randomUUID(),
+    productId: undefined,
+    description: '',
+    quantity: 1,
+    unitPrice: 0,
+    total: 0,
+  };
+}
 
-const INITIAL_CATEGORIES: Category[] = [
-    { id: 'cat1', name: 'Services' },
-    { id: 'cat2', name: 'Hardware' },
-    { id: 'cat3', name: 'Subscriptions' },
-];
+const BUILDER_DEFAULTS: InvoiceBuilderState = {
+  clientId: '',
+  date: new Date().toISOString().split('T')[0],
+  dueDate: '',
+  taxRate: 0,
+  notes: '',
+  paymentTerms: 'NET_30',
+  items: [],
+  subtotal: 0,
+  taxAmount: 0,
+  total: 0,
+};
 
-const INITIAL_PRODUCTS: Product[] = [
-    { id: 'p1', name: 'Web Development', description: 'Hourly development rate', sku: 'SVC-WEB-001', price: 150, stockQuantity: 9999, categoryId: 'cat1', status: 'active', createdAt: new Date().toISOString() },
-    { id: 'p2', name: 'Server Setup', description: 'Initial server configuration', sku: 'SVC-SRV-001', price: 500, stockQuantity: 9999, categoryId: 'cat1', status: 'active', createdAt: new Date().toISOString() },
-    { id: 'p3', name: 'Laptop Pro', description: 'High-end developer laptop', sku: 'HW-LAP-001', price: 2500, stockQuantity: 15, categoryId: 'cat2', status: 'active', createdAt: new Date().toISOString() },
-];
+export const useInvoiceBuilderStore = create<InvoiceBuilderStore>((set, get) => ({
+  ...BUILDER_DEFAULTS,
 
-const INITIAL_EBOOKS: Ebook[] = [
-    { id: 'e1', title: 'Mastering Modern Payments', author: 'FinTech Pro', description: 'A complete guide to digital payments in Nigeria.', price: 5000, coverUrl: '/ebook-cover-1.jpg', status: 'published', createdAt: new Date().toISOString() },
-    { id: 'e2', title: 'Invoice like a Pro', author: 'BizGuru', description: 'Get paid faster with better invoices.', price: 2500, coverUrl: '/ebook-cover-2.jpg', status: 'published', createdAt: new Date().toISOString() },
-];
+  setClientId: (clientId) => set({ clientId }),
+  setDate: (date) => set({ date }),
+  setDueDate: (dueDate) => set({ dueDate }),
+  setNotes: (notes) => set({ notes }),
+  setPaymentTerms: (paymentTerms) => set({ paymentTerms }),
 
-export const useInvoiceStore = create<InvoiceState>((set, get) => ({
-    invoices: [],
-    clients: INITIAL_CLIENTS,
-    purchaseOrders: INITIAL_POS,
-    products: INITIAL_PRODUCTS,
-    categories: INITIAL_CATEGORIES,
-    cart: [],
-    ebooks: INITIAL_EBOOKS,
-
-    addInvoice: (invoice) => set((state) => ({
-        invoices: [invoice, ...state.invoices]
+  setTaxRate: (taxRate) =>
+    set((state) => ({
+      taxRate,
+      ...computeTotals(state.items, taxRate),
     })),
 
-    updateInvoice: (id, updated) => set((state) => ({
-        invoices: state.invoices.map((inv) =>
-            inv.id === id ? { ...inv, ...updated } : inv
-        )
-    })),
-
-    deleteInvoice: (id) => set((state) => ({
-        invoices: state.invoices.filter((inv) => inv.id !== id)
-    })),
-
-    addClient: (client) => set((state) => ({
-        clients: [...state.clients, client]
-    })),
-
-    addEbook: (ebook) => set((state) => ({
-        ebooks: [ebook, ...state.ebooks]
-    })),
-
-    updateEbook: (id, updated) => set((state) => ({
-        ebooks: state.ebooks.map((e) => e.id === id ? { ...e, ...updated } : e)
-    })),
-
-    deleteEbook: (id) => set((state) => ({
-        ebooks: state.ebooks.filter((e) => e.id !== id)
-    })),
-
-    addProduct: (product) => set((state) => ({
-        products: [product, ...state.products]
-    })),
-
-    updateProduct: (id, updated) => set((state) => ({
-        products: state.products.map((p) => p.id === id ? { ...p, ...updated } : p)
-    })),
-
-    deleteProduct: (id) => set((state) => ({
-        products: state.products.filter((p) => p.id !== id)
-    })),
-
-    addToCart: (item) => set((state) => {
-        const existingItem = state.cart.find(i => i.productId === item.productId);
-        if (existingItem) {
-            return {
-                cart: state.cart.map(i =>
-                    i.productId === item.productId
-                        ? { ...i, quantity: i.quantity + item.quantity }
-                        : i
-                )
-            };
-        }
-        return { cart: [...state.cart, item] };
+  addItem: () =>
+    set((state) => {
+      const items = [...state.items, newItem()];
+      return { items, ...computeTotals(items, state.taxRate) };
     }),
 
-    removeFromCart: (productId) => set((state) => ({
-        cart: state.cart.filter(i => i.productId !== productId)
-    })),
-
-    updateCartQuantity: (productId, quantity) => set((state) => ({
-        cart: state.cart.map(i =>
-            i.productId === productId ? { ...i, quantity } : i
-        )
-    })),
-
-    clearCart: () => set({ cart: [] }),
-
-    autoMatchInvoice: (invoiceId) => set((state) => {
-        const invoice = state.invoices.find(inv => inv.id === invoiceId);
-        if (!invoice) return state;
-
-        // Simple match logic: Find PO with same Vendor + Similar Amount (within 1%)
-        const matchedPO = state.purchaseOrders.find(po =>
-            po.vendorId === invoice.clientId &&
-            Math.abs(po.totalAmount - invoice.total) < (invoice.total * 0.01)
-        );
-
-        const updatedInvoice: Invoice = {
-            ...invoice,
-            matchStatus: matchedPO ? 'matched' : 'mismatched',
-            relatedDocuments: matchedPO ? { poNumber: matchedPO.number } : undefined
-        };
-
-        return {
-            invoices: state.invoices.map(inv => inv.id === invoiceId ? updatedInvoice : inv)
-        };
+  removeItem: (id) =>
+    set((state) => {
+      const items = state.items.filter((item) => item.id !== id);
+      return { items, ...computeTotals(items, state.taxRate) };
     }),
 
-    submitForApproval: (invoiceId) => set((state) => {
-        // Auto-approve if < 1000 and matched
-        const invoice = state.invoices.find(inv => inv.id === invoiceId);
-        if (!invoice) return state;
-
-        const isSmallAmount = invoice.total < 1000;
-        const isMatched = invoice.matchStatus === 'matched';
-
-        const newStatus = (isSmallAmount && isMatched) ? 'approved' : 'pending';
-
-        return {
-            invoices: state.invoices.map(inv => inv.id === invoiceId ? { ...inv, approvalStatus: newStatus } : inv)
-        };
+  updateItem: (id, updates) =>
+    set((state) => {
+      const items = state.items.map((item) => {
+        if (item.id !== id) return item;
+        const merged = { ...item, ...updates };
+        // Recalculate row total whenever price or quantity changes
+        merged.total = merged.quantity * merged.unitPrice;
+        return merged;
+      });
+      return { items, ...computeTotals(items, state.taxRate) };
     }),
 
-    approveInvoice: (invoiceId) => set((state) => ({
-        invoices: state.invoices.map(inv =>
-            inv.id === invoiceId ? {
-                ...inv,
-                approvalStatus: 'approved',
-                scheduledDate: inv.dueDate // Auto-schedule on approval
-            } : inv
-        )
-    })),
+  autofillFromOCR: (data) =>
+    set((state) => {
+      const items = data.items ?? state.items;
+      const taxRate = data.taxRate ?? state.taxRate;
+      return {
+        ...state,
+        ...data,
+        items,
+        taxRate,
+        ...computeTotals(items, taxRate),
+      };
+    }),
 
-    rejectInvoice: (invoiceId) => set((state) => ({
-        invoices: state.invoices.map(inv =>
-            inv.id === invoiceId ? { ...inv, approvalStatus: 'rejected' } : inv
-        )
-    })),
+  reset: () => set({ ...BUILDER_DEFAULTS, items: [] }),
+}));
 
-    getStats: () => {
-        const { invoices } = get();
-        return invoices.reduce((acc, inv) => {
-            if (inv.status === 'paid') {
-                acc.totalRevenue += inv.total;
-                acc.paidCount += 1;
-            }
-            if (inv.status === 'pending' || inv.status === 'overdue') {
-                acc.pendingAmount += inv.total;
-                acc.pendingCount += 1;
-            }
-            if (inv.approvalStatus === 'pending') {
-                acc.approvalPendingCount += 1;
-            }
-            return acc;
-        }, { totalRevenue: 0, pendingCount: 0, pendingAmount: 0, paidCount: 0, approvalPendingCount: 0 });
-    }
+// ─────────────────────────────────────────────
+// PRODUCT FILTER STORE
+// ─────────────────────────────────────────────
+
+interface ProductFilterStore extends ProductFilterState {
+  setSearch: (search: string) => void;
+  setCategoryId: (id: string) => void;
+  setMinPrice: (price: string) => void;
+  setMaxPrice: (price: string) => void;
+  setIsActive: (val: string) => void;
+  reset: () => void;
+}
+
+const PRODUCT_FILTER_DEFAULTS: ProductFilterState = {
+  search: '',
+  categoryId: '',
+  minPrice: '',
+  maxPrice: '',
+  isActive: 'all',
+};
+
+export const useProductFilterStore = create<ProductFilterStore>((set) => ({
+  ...PRODUCT_FILTER_DEFAULTS,
+  setSearch: (search) => set({ search }),
+  setCategoryId: (categoryId) => set({ categoryId }),
+  setMinPrice: (minPrice) => set({ minPrice }),
+  setMaxPrice: (maxPrice) => set({ maxPrice }),
+  setIsActive: (isActive) => set({ isActive }),
+  reset: () => set(PRODUCT_FILTER_DEFAULTS),
+}));
+
+// ─────────────────────────────────────────────
+// INVOICE FILTER STORE
+// ─────────────────────────────────────────────
+
+interface InvoiceFilterStore extends InvoiceFilterState {
+  setSearch: (search: string) => void;
+  setStatus: (status: string) => void;
+  setClientId: (id: string) => void;
+  setDateFrom: (date: string) => void;
+  setDateTo: (date: string) => void;
+  reset: () => void;
+}
+
+const INVOICE_FILTER_DEFAULTS: InvoiceFilterState = {
+  search: '',
+  status: 'all',
+  clientId: '',
+  dateFrom: '',
+  dateTo: '',
+};
+
+export const useInvoiceFilterStore = create<InvoiceFilterStore>((set) => ({
+  ...INVOICE_FILTER_DEFAULTS,
+  setSearch: (search) => set({ search }),
+  setStatus: (status) => set({ status }),
+  setClientId: (clientId) => set({ clientId }),
+  setDateFrom: (dateFrom) => set({ dateFrom }),
+  setDateTo: (dateTo) => set({ dateTo }),
+  reset: () => set(INVOICE_FILTER_DEFAULTS),
 }));

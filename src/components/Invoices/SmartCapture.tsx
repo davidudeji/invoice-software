@@ -1,121 +1,229 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Upload, FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { Invoice } from "@/types";
+import { Upload, FileText, Loader2, CheckCircle, AlertCircle, Camera } from "lucide-react";
 
-interface SmartCaptureProps {
-    onCapture: (data: Partial<Invoice>) => void;
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
+
+interface OCRItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
 }
 
+interface OCRData {
+  vendorName?: string;
+  items?: OCRItem[];
+  taxAmount?: number;
+  total?: number;
+  dueDate?: string;
+}
+
+interface SmartCaptureProps {
+  onCapture: (data: OCRData) => void;
+}
+
+// ─────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────
+
 export function SmartCapture({ onCapture }: SmartCaptureProps) {
-    const [isDragging, setIsDragging] = useState(false);
-    const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
-    const [fileName, setFileName] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
+  const [fileName, setFileName] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [extractedSummary, setExtractedSummary] = useState<{
+    itemCount: number;
+    total?: number;
+    vendor?: string;
+  } | null>(null);
 
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(true);
-    }, []);
+  const processFile = async (file: File) => {
+    setStatus("processing");
+    setFileName(file.name);
+    setErrorMsg("");
+    setExtractedSummary(null);
 
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-    }, []);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
 
-    const processFile = (file: File) => {
-        setStatus('processing');
-        setFileName(file.name);
+      const res = await fetch("/api/ocr", {
+        method: "POST",
+        body: formData,
+      });
 
-        // Simulate OCR Processing
-        setTimeout(() => {
-            // Mock extracted data
-            const mockData: Partial<Invoice> = {
-                // Randomly pick a client ID for demo purposes, or leave blank to force user matching
-                // For this demo, let's simulate extracting a known vendor (Acme Corp -> c1)
-                clientId: 'c1',
-                items: [
-                    { id: crypto.randomUUID(), description: 'Web Development Services', quantity: 1, price: 5000 },
-                    { id: crypto.randomUUID(), description: 'Server Maintenance', quantity: 2, price: 150 }
-                ],
-                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 days from now
-            };
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "OCR processing failed");
+      }
 
-            setStatus('success');
-            onCapture(mockData);
-        }, 2000);
-    };
+      const data: OCRData = await res.json();
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const file = e.dataTransfer.files[0];
-        if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) {
-            processFile(file);
-        } else {
-            alert("Please upload a PDF or Image file.");
-        }
-    }, []);
+      setStatus("success");
+      setExtractedSummary({
+        itemCount: data.items?.length ?? 0,
+        total: data.total,
+        vendor: data.vendorName,
+      });
 
-    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            processFile(file);
-        }
-    };
+      onCapture(data);
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(err instanceof Error ? err.message : "Processing failed. Please try again.");
+    }
+  };
 
-    return (
-        <div
-            className={`
-                relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200
-                ${isDragging ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'}
-                ${status === 'processing' ? 'bg-slate-50' : ''}
-                ${status === 'success' ? 'border-green-500 bg-green-50/30' : ''}
-            `}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-        >
-            <input
-                type="file"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                onChange={handleFileInput}
-                disabled={status === 'processing'}
-            />
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
 
-            <div className={`space-y-4 ${status === 'processing' ? 'opacity-50' : ''}`}>
-                <div className="mx-auto w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 transition-transform duration-300 transform group-hover:scale-110">
-                    {status === 'success' ? <CheckCircle size={24} className="text-green-600" /> :
-                        status === 'error' ? <AlertCircle size={24} className="text-red-600" /> :
-                            <Upload size={24} />}
-                </div>
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
 
-                <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-slate-900">
-                        {status === 'success' ? 'Scan Complete!' : 'Smart Invoice Capture'}
-                    </h3>
-                    <p className="text-slate-500 text-sm max-w-sm mx-auto">
-                        {status === 'success' ? `Successfully extracted data from ${fileName}` :
-                            "Drag and drop your invoice here, or click to browse. We'll extract the data automatically."}
-                    </p>
-                </div>
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type.startsWith("image/") || file.type === "application/pdf")) {
+      processFile(file);
+    } else {
+      setStatus("error");
+      setErrorMsg("Please upload an image (JPG, PNG, WebP) or PDF file.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-                {status === 'idle' && (
-                    <div className="flex justify-center gap-4 text-xs text-slate-400 font-medium pt-2">
-                        <span className="flex items-center gap-1"><FileText size={12} /> PDF</span>
-                        <span className="flex items-center gap-1"><FileText size={12} /> JPG</span>
-                        <span className="flex items-center gap-1"><FileText size={12} /> PNG</span>
-                    </div>
-                )}
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const reset = () => {
+    setStatus("idle");
+    setFileName("");
+    setErrorMsg("");
+    setExtractedSummary(null);
+  };
+
+  return (
+    <div
+      className={`
+        relative rounded-xl border-2 border-dashed transition-all duration-200 overflow-hidden
+        ${isDragging ? "border-indigo-400 bg-indigo-50/60" : "border-slate-200 hover:border-indigo-300 hover:bg-slate-50/50"}
+        ${status === "success" ? "border-emerald-300 bg-emerald-50/30" : ""}
+        ${status === "error" ? "border-red-300 bg-red-50/20" : ""}
+      `}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Clickable file input */}
+      {status === "idle" && (
+        <input
+          type="file"
+          accept="image/*,application/pdf"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onChange={handleFileInput}
+          capture="environment" // enables camera on mobile
+        />
+      )}
+
+      <div className="p-5 text-center">
+        {/* Status icons */}
+        <div className="mx-auto mb-3 flex items-center justify-center">
+          {status === "idle" && (
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center">
+                <Upload size={18} className="text-indigo-500" />
+              </div>
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center md:hidden">
+                <Camera size={18} className="text-slate-500" />
+              </div>
             </div>
-
-            {status === 'processing' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 rounded-xl backdrop-blur-sm z-10">
-                    <Loader2 size={40} className="text-indigo-600 animate-spin mb-3" />
-                    <p className="font-semibold text-indigo-900">Analysis in progress...</p>
-                    <p className="text-xs text-indigo-600/80">Extracting vendor, items, and dates</p>
-                </div>
-            )}
+          )}
+          {status === "processing" && (
+            <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center">
+              <Loader2 size={20} className="text-indigo-500 animate-spin" />
+            </div>
+          )}
+          {status === "success" && (
+            <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+              <CheckCircle size={20} className="text-emerald-600" />
+            </div>
+          )}
+          {status === "error" && (
+            <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertCircle size={20} className="text-red-500" />
+            </div>
+          )}
         </div>
-    );
+
+        {/* Text content */}
+        {status === "idle" && (
+          <>
+            <p className="text-sm font-semibold text-slate-700">
+              Drop a receipt or invoice image here
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              or tap to browse / use camera · PDF, JPG, PNG, WebP
+            </p>
+            <div className="flex justify-center gap-3 mt-3 text-xs text-slate-400 font-medium">
+              {["PDF", "JPG", "PNG", "WebP"].map((fmt) => (
+                <span key={fmt} className="flex items-center gap-1">
+                  <FileText size={10} /> {fmt}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+
+        {status === "processing" && (
+          <>
+            <p className="text-sm font-semibold text-slate-700">Analysing {fileName}…</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Extracting vendor, line items, tax & totals
+            </p>
+          </>
+        )}
+
+        {status === "success" && extractedSummary && (
+          <>
+            <p className="text-sm font-semibold text-emerald-700">Scan complete!</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {extractedSummary.vendor && <><strong>{extractedSummary.vendor}</strong> · </>}
+              {extractedSummary.itemCount} item{extractedSummary.itemCount !== 1 ? "s" : ""} extracted
+              {extractedSummary.total != null && <> · Total: ${extractedSummary.total.toFixed(2)}</>}
+            </p>
+            <button
+              type="button"
+              onClick={reset}
+              className="mt-2 text-xs text-indigo-500 hover:text-indigo-700 underline"
+            >
+              Scan another
+            </button>
+          </>
+        )}
+
+        {status === "error" && (
+          <>
+            <p className="text-sm font-semibold text-red-600">Scan failed</p>
+            <p className="text-xs text-red-400 mt-1">{errorMsg}</p>
+            <button
+              type="button"
+              onClick={reset}
+              className="mt-2 text-xs text-indigo-500 hover:text-indigo-700 underline"
+            >
+              Try again
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }

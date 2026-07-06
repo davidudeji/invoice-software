@@ -1,113 +1,199 @@
-"use client";
+import { getSalesSummary } from "@/app/actions/reports";
+import { AppSidebar } from "@/components/Layout/AppSidebar";
+import { RevenueChart } from "@/components/Dashboard/RevenueChart";
+import { RecentInvoicesWidget } from "@/components/Dashboard/RecentInvoicesWidget";
+import {
+  DollarSign,
+  FileCheck,
+  Clock,
+  AlertTriangle,
+  Plus,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
+import Link from "next/link";
+import type { Metadata } from "next";
 
-import { StatCard } from '@/components/Dashboard/StatCard';
-import { AppSidebar } from '@/components/Layout/AppSidebar';
-import { DashboardHeader } from '@/components/Dashboard/DashboardHeader';
-import { RecentInvoicesTable } from '@/components/Dashboard/RecentInvoicesTable';
-import { CashFlowChart } from '@/components/Dashboard/CashFlowChart';
-import { useInvoiceStore } from '@/lib/store';
-import Link from 'next/link';
-import { DollarSign, FileCheck, Clock, TrendingUp, Plus, Users, Send } from 'lucide-react';
+export const metadata: Metadata = { title: "Dashboard" };
 
-export default function Dashboard() {
-    const { getStats } = useInvoiceStore();
-    const stats = getStats();
+// Revalidate dashboard data every 60 seconds
+export const revalidate = 60;
 
-    return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-            <AppSidebar />
+export default async function DashboardPage() {
+  const stats = await getSalesSummary();
 
-            <main className="pl-64 min-h-screen flex flex-col">
-                <DashboardHeader />
+  const statCards = [
+    {
+      label: "Total Revenue",
+      value: `$${stats.totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      icon: DollarSign,
+      gradient: "from-indigo-500 to-indigo-700",
+      glow: "shadow-indigo-500/25",
+      sub: "All time",
+    },
+    {
+      label: "Paid Invoices",
+      value: stats.paidCount.toString(),
+      icon: FileCheck,
+      gradient: "from-emerald-500 to-emerald-700",
+      glow: "shadow-emerald-500/25",
+      sub: "Total completed",
+    },
+    {
+      label: "Outstanding",
+      value: `$${stats.outstandingAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      icon: Clock,
+      gradient: "from-amber-400 to-amber-600",
+      glow: "shadow-amber-400/25",
+      sub: "Awaiting payment",
+    },
+    {
+      label: "Overdue",
+      value: stats.overdueCount.toString(),
+      icon: AlertTriangle,
+      gradient: "from-rose-500 to-rose-700",
+      glow: "shadow-rose-500/25",
+      sub: "Needs attention",
+    },
+  ];
 
-                <div className="p-8 max-w-[1600px] mx-auto w-full space-y-8">
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans">
+      <AppSidebar />
 
-                    {/* Welcome Section */}
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-                            <p className="text-slate-500 mt-1">Welcome back, here's what's happening today.</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <Link href="/clients" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
-                                <Users size={16} />
-                                <span>Add Client</span>
-                            </Link>
-                            <Link href="/invoices/new" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-colors flex items-center gap-2">
-                                <Plus size={16} />
-                                <span>New Invoice</span>
-                            </Link>
-                        </div>
+      <main className="pl-64 min-h-screen">
+        <div className="max-w-[1400px] mx-auto p-8 space-y-8 page-enter">
+          {/* Page Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+              <p className="text-slate-500 text-sm mt-0.5">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/clients/new"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <Plus size={15} />
+                Add Client
+              </Link>
+              <Link
+                href="/invoices/new"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg shadow-indigo-500/25"
+              >
+                <Plus size={15} />
+                New Invoice
+              </Link>
+            </div>
+          </div>
+
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+            {statCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={card.label}
+                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.gradient} p-6 text-white shadow-xl ${card.glow}`}
+                >
+                  <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
+                  <div className="relative">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <Icon size={20} className="text-white" />
+                      </div>
+                      <TrendingUp size={14} className="text-white/60 mt-1" />
                     </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatCard
-                            label="Total Revenue"
-                            value={`$${stats.totalRevenue.toLocaleString()}`}
-                            trend="12.5%"
-                            trendUp={true}
-                            icon={DollarSign}
-                            color="indigo"
-                        />
-                        <StatCard
-                            label="Paid Invoices"
-                            value={stats.paidCount.toString()}
-                            trend="8.1%"
-                            trendUp={true}
-                            icon={FileCheck}
-                            color="emerald"
-                        />
-                        <StatCard
-                            label="Pending Amount"
-                            value={`$${stats.pendingAmount.toLocaleString()}`}
-                            trend="2.3%"
-                            trendUp={false}
-                            icon={Clock}
-                            color="amber"
-                        />
-                        <StatCard
-                            label="Pending Count"
-                            value={stats.pendingCount.toString()}
-                            trend={stats.pendingCount > 0 ? "Active" : "Stable"}
-                            trendUp={true}
-                            icon={TrendingUp}
-                            color="purple"
-                        />
-                    </div>
-
-                    {/* Main Content Grid */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                        {/* Left Column: Recent Invoices (2/3 width on large screens) */}
-                        <div className="xl:col-span-2">
-                            <RecentInvoicesTable />
-                        </div>
-
-                        {/* Right Column: Cash Flow & Quick Actions (1/3 width) */}
-                        <div className="space-y-8">
-                            <div className="h-80">
-                                <CashFlowChart />
-                            </div>
-
-                            {/* Quick Actions / Tips Card */}
-                            <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
-                                {/* Decorative circles */}
-                                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-white/10 blur-3xl"></div>
-                                <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-indigo-400/20 blur-3xl"></div>
-
-                                <h3 className="font-bold text-lg mb-2 relative z-10">Pro Tip</h3>
-                                <p className="text-indigo-100 text-sm mb-6 relative z-10">
-                                    Did you know you can set up recurring invoices to automate your monthly billing?
-                                </p>
-                                <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 relative z-10">
-                                    <Send size={16} />
-                                    <span>Set up Automation</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <p className="text-white/70 text-xs font-medium uppercase tracking-wider mb-1">
+                      {card.label}
+                    </p>
+                    <p className="text-3xl font-bold tracking-tight">{card.value}</p>
+                    <p className="text-white/60 text-xs mt-1">{card.sub}</p>
+                  </div>
                 </div>
-            </main>
+              );
+            })}
+          </div>
+
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Revenue Chart (spans 2 cols) */}
+            <div className="xl:col-span-2 card p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Revenue Overview</h2>
+                  <p className="text-slate-400 text-sm">Monthly revenue trend — current year</p>
+                </div>
+              </div>
+              <RevenueChart data={stats.revenueByMonth} />
+            </div>
+
+            {/* Quick Actions + CTA */}
+            <div className="space-y-5">
+              {/* Quick Actions */}
+              <div className="card p-6">
+                <h2 className="text-base font-semibold text-slate-900 mb-4">Quick Actions</h2>
+                <div className="space-y-2">
+                  {[
+                    { label: "Create Invoice", href: "/invoices/new", desc: "Bill a client" },
+                    { label: "Add Product", href: "/inventory/new", desc: "Update catalog" },
+                    { label: "New Client", href: "/clients/new", desc: "Add contact" },
+                    { label: "View Sales", href: "/sales", desc: "Revenue ledger" },
+                    { label: "AI Report", href: "/reports", desc: "Business insights" },
+                  ].map((action) => (
+                    <Link
+                      key={action.href}
+                      href={action.href}
+                      className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 group transition-colors"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-800 group-hover:text-indigo-600 transition-colors">
+                          {action.label}
+                        </p>
+                        <p className="text-xs text-slate-400">{action.desc}</p>
+                      </div>
+                      <ArrowRight
+                        size={14}
+                        className="text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA Banner */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 p-6 text-white">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.12),transparent)]" />
+                <div className="relative">
+                  <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                    <TrendingUp size={18} className="text-white" />
+                  </div>
+                  <h3 className="font-bold text-base mb-1">AI Business Insights</h3>
+                  <p className="text-indigo-200 text-sm mb-4">
+                    Get an executive summary of your business health powered by Gemini AI.
+                  </p>
+                  <Link
+                    href="/reports"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Generate Report <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Invoices */}
+          <RecentInvoicesWidget />
         </div>
-    );
+      </main>
+    </div>
+  );
 }

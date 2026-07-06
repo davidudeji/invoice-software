@@ -1,95 +1,105 @@
-export type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'overdue';
-export type ApprovalStatus = 'draft' | 'pending' | 'approved' | 'rejected';
-export type MatchStatus = 'matched' | 'mismatched' | 'unmatched';
+// ─────────────────────────────────────────────
+// Re-export Prisma types as canonical types
+// ─────────────────────────────────────────────
+export type {
+  User,
+  Settings,
+  Client,
+  Product,
+  Category,
+  Invoice,
+  InvoiceItem,
+  InvoiceStatus,
+  Payment,
+  PaymentStatus,
+  Sale,
+  AuditLog,
+  AuditAction,
+  AuditTarget,
+  TaxRate,
+  PaymentMethod,
+} from '@prisma/client';
 
-export interface Client {
-    id: string;
-    name: string;
-    email: string;
-    address?: string;
-    logoUrl?: string;
+// ─────────────────────────────────────────────
+// Invoice Builder (ephemeral UI state)
+// ─────────────────────────────────────────────
+export interface InvoiceBuilderItem {
+  id: string; // local uuid for react key
+  productId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
 }
 
-export interface InvoiceItem {
-    id: string;
-    description: string;
-    quantity: number;
-    price: number;
+export interface InvoiceBuilderState {
+  clientId: string;
+  date: string;
+  dueDate: string;
+  taxRate: number;
+  notes: string;
+  paymentTerms: string;
+  items: InvoiceBuilderItem[];
+  subtotal: number;
+  taxAmount: number;
+  total: number;
 }
 
-export interface Invoice {
-    id: string;
-    number: string;
-    createdAt: string; // ISO Date
-    dueDate: string;   // ISO Date
-    status: InvoiceStatus;
-
-    // Advanced Features
-    approvalStatus: ApprovalStatus;
-    matchStatus: MatchStatus;
-    scheduledDate?: string; // ISO Date
-    relatedDocuments?: {
-        poNumber?: string;
-        contractId?: string;
-    };
-
-    clientId: string;
-    client?: Client; // Populated for UI
-
-    items: InvoiceItem[];
-
-    // Computed values
-    subtotal: number;
-    taxRate: number; // Percentage (e.g., 10 for 10%)
-    taxAmount: number;
-    total: number;
-
-    notes?: string;
+// ─────────────────────────────────────────────
+// Filter State (for inventory / invoices lists)
+// ─────────────────────────────────────────────
+export interface ProductFilterState {
+  search: string;
+  categoryId: string;
+  minPrice: string;
+  maxPrice: string;
+  isActive: string; // 'all' | 'true' | 'false'
 }
 
-export interface PurchaseOrder {
-    id: string;
-    number: string;
-    vendorId: string; // matches clientId
-    totalAmount: number;
-    status: 'open' | 'closed';
-    createdAt: string;
+export interface InvoiceFilterState {
+  search: string;
+  status: string; // 'all' | InvoiceStatus
+  clientId: string;
+  dateFrom: string;
+  dateTo: string;
 }
 
-export interface Category {
-    id: string;
-    name: string;
-    description?: string;
+// ─────────────────────────────────────────────
+// Dashboard
+// ─────────────────────────────────────────────
+export interface DashboardStats {
+  totalRevenue: number;
+  paidInvoicesCount: number;
+  outstandingAmount: number;
+  overdueCount: number;
+  revenueChange: number; // percentage vs previous period
+  revenueByMonth: { month: string; revenue: number }[];
 }
 
-export interface Product {
-    id: string;
-    name: string;
-    description: string;
-    sku: string;
-    price: number;
-    stockQuantity: number;
-    categoryId: string;
-    imageUrl?: string;
-    status: 'active' | 'archived';
-    createdAt: string;
+// ─────────────────────────────────────────────
+// Reports / AI
+// ─────────────────────────────────────────────
+export interface ReportData {
+  dateFrom: string;
+  dateTo: string;
+  totalRevenue: number;
+  totalSalesCount: number;
+  outstandingDebt: number;
+  overdueCount: number;
+  topProducts: { name: string; quantity: number; revenue: number }[];
+  revenueByPeriod: { label: string; revenue: number }[];
 }
 
-export interface CartItem {
-    productId: string;
-    quantity: number;
-    priceAtAdd: number; // Snapshot of price
+export interface AISummaryResponse {
+  summary: string;
+  generatedAt: string;
 }
 
-export interface Ebook {
-    id: string;
-    title: string;
-    author: string;
-    description: string;
-    price: number;
-    coverUrl: string;
-    fileUrl?: string; // Only for admin or purchased
-    previewUrl?: string; // Publicly accessible
-    status: 'draft' | 'published' | 'archived';
-    createdAt: string;
-}
+// ─────────────────────────────────────────────
+// Server Action State
+// ─────────────────────────────────────────────
+export type ActionState = {
+  errors?: Record<string, string[]>;
+  message?: string | null;
+  success?: boolean;
+};
