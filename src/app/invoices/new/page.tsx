@@ -13,7 +13,7 @@ export default async function NewInvoicePage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [clients, products, settings] = await Promise.all([
+  const [clients, products, settings, defaultTaxRate] = await Promise.all([
     prisma.client.findMany({
       where: { userId: session.user.id },
       orderBy: { name: "asc" },
@@ -24,6 +24,10 @@ export default async function NewInvoicePage() {
       orderBy: { name: "asc" },
     }),
     prisma.settings.findUnique({ where: { userId: session.user.id } }),
+    prisma.taxRate.findFirst({
+      where: { userId: session.user.id, isDefault: true },
+      select: { rate: true },
+    }),
   ]);
 
   return (
@@ -50,7 +54,7 @@ export default async function NewInvoicePage() {
           <InvoiceBuilderForm
             clients={clients}
             products={products}
-            defaultTaxRate={settings?.taxRate ?? 0}
+            defaultTaxRate={defaultTaxRate?.rate ?? 0}
             currency={settings?.currency ?? "USD"}
             businessName={settings?.businessName ?? "Your Business"}
             logoUrl={settings?.logoUrl ?? null}

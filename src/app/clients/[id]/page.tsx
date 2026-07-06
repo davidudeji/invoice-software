@@ -44,14 +44,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{client.name}</h1>
-                        {client.tags && (
-                            <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
-                                {client.tags}
-                            </span>
-                        )}
-                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">{client.name}</h1>
                     {client.companyName && <p className="text-lg text-slate-500 mt-1">{client.companyName}</p>}
                 </div>
                 <div className="flex gap-3">

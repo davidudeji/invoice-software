@@ -30,7 +30,7 @@ export class InvoiceService {
         // Service Level Business Logic: Calculate Extents
         let subtotal = 0;
         const itemsWithTotals = input.items.map(item => {
-            const itemTotal = item.quantity * item.price;
+            const itemTotal = item.quantity * item.unitPrice;
             subtotal += itemTotal;
             return {
                 ...item,
@@ -64,11 +64,11 @@ export class InvoiceService {
         const invoice = await InvoiceRepository.findById(id, userId);
         if (!invoice) throw new ApiError('Invoice not found', 404);
 
-        if (!['DRAFT', 'PENDING', 'PAID', 'OVERDUE'].includes(payload.status)) {
+        if (!['DRAFT', 'SENT', 'PAID', 'PARTIALLY_PAID', 'OVERDUE', 'CANCELLED'].includes(payload.status)) {
             throw new ApiError('Invalid Status Configuration', 400);
         }
 
-        return InvoiceRepository.update(id, userId, { status: payload.status });
+        return InvoiceRepository.update(id, userId, { status: payload.status as 'DRAFT' | 'SENT' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'CANCELLED' });
     }
 
     static async deleteInvoice(id: string, userId: string) {

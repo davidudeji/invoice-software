@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
-import { Product } from "@/types";
 
 export default function NewProductPage() {
     const router = useRouter();
@@ -27,7 +26,7 @@ export default function NewProductPage() {
         e.preventDefault();
         setLoading(true);
 
-        const newProduct: Product = {
+        const newProduct = {
             id: crypto.randomUUID(),
             name: formData.name,
             sku: formData.sku,
@@ -35,8 +34,8 @@ export default function NewProductPage() {
             price: parseFloat(formData.price),
             stockQuantity: parseInt(formData.stockQuantity),
             description: formData.description,
-            status: formData.status as 'active' | 'archived',
-            createdAt: new Date().toISOString()
+            isActive: formData.status === 'active',
+            createdAt: new Date()
         };
 
         addProduct(newProduct);

@@ -14,7 +14,10 @@ export function InvoiceItemsList({ items, onChange, currencySymbol = '$' }: Invo
             id: crypto.randomUUID(),
             description: '',
             quantity: 1,
-            price: 0
+            unitPrice: 0,
+            total: 0,
+            invoiceId: '',
+            productId: null,
         };
         onChange([...items, newItem]);
     };
@@ -79,13 +82,13 @@ export function InvoiceItemsList({ items, onChange, currencySymbol = '$' }: Invo
                                 min="0"
                                 step="0.01"
                                 className="w-full bg-white border border-slate-300 rounded-md px-3 py-2 text-right text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                                value={item.price}
-                                onChange={(e) => handleUpdateItem(item.id, 'price', parseFloat(e.target.value) || 0)}
+                                value={item.unitPrice}
+                                onChange={(e) => handleUpdateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
                             />
                         </div>
 
                         <div className="col-span-2 text-right font-medium text-slate-700 text-sm">
-                            {currencySymbol}{(item.quantity * item.price).toFixed(2)}
+                            {currencySymbol}{(item.quantity * item.unitPrice).toFixed(2)}
                         </div>
                     </div>
                 ))}

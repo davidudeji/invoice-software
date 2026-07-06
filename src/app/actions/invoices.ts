@@ -48,7 +48,8 @@ export async function createInvoice(
   }
 ): Promise<ActionState> {
   const session = await auth();
-  if (!session?.user?.id) return { message: 'Not authenticated' };
+  const userId = session?.user?.id;
+  if (!userId) return { message: 'Not authenticated' };
 
   const validated = CreateInvoiceSchema.safeParse(payload);
   if (!validated.success) {
@@ -67,9 +68,9 @@ export async function createInvoice(
   const total = subtotal + taxAmount;
 
   // Generate invoice number
-  const settings = await prisma.settings.findUnique({ where: { userId: session.user.id } });
+  const settings = await prisma.settings.findUnique({ where: { userId } });
   const prefix = settings?.invoicePrefix || 'INV-';
-  const count = await prisma.invoice.count({ where: { userId: session.user.id } });
+  const count = await prisma.invoice.count({ where: { userId } });
   const invoiceNumber = `${prefix}${String(count + 1).padStart(4, '0')}`;
 
   let invoiceId: string;
@@ -79,7 +80,7 @@ export async function createInvoice(
       // Create invoice
       const newInvoice = await tx.invoice.create({
         data: {
-          userId: session.user.id!,
+          userId,
           clientId,
           number: invoiceNumber,
           status: sendEmail ? InvoiceStatus.SENT : InvoiceStatus.DRAFT,
@@ -126,7 +127,7 @@ export async function createInvoice(
     invoiceId = invoice.id;
 
     await writeAuditLog({
-      userId: session.user.id,
+      userId,
       action: 'CREATE',
       target: 'INVOICE',
       targetId: invoice.id,
@@ -163,11 +164,12 @@ export async function updateInvoiceStatus(
   status: InvoiceStatus
 ): Promise<ActionState> {
   const session = await auth();
-  if (!session?.user?.id) return { message: 'Not authenticated' };
+  const userId = session?.user?.id;
+  if (!userId) return { message: 'Not authenticated' };
 
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId, userId: session.user.id },
+      where: { id: invoiceId, userId },
       include: { client: true },
     });
     if (!invoice) return { message: 'Invoice not found.' };
@@ -185,7 +187,7 @@ export async function updateInvoiceStatus(
         if (!existing) {
           await tx.sale.create({
             data: {
-              userId: session.user.id!,
+              userId,
               invoiceId,
               totalAmount: invoice.total,
               saleDate: new Date(),
@@ -196,7 +198,7 @@ export async function updateInvoiceStatus(
     });
 
     await writeAuditLog({
-      userId: session.user.id,
+      userId,
       action: 'UPDATE',
       target: 'INVOICE',
       targetId: invoiceId,
@@ -220,18 +222,19 @@ export async function updateInvoiceStatus(
 
 export async function deleteInvoice(invoiceId: string): Promise<ActionState> {
   const session = await auth();
-  if (!session?.user?.id) return { message: 'Not authenticated' };
+  const userId = session?.user?.id;
+  if (!userId) return { message: 'Not authenticated' };
 
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId, userId: session.user.id },
+      where: { id: invoiceId, userId },
     });
     if (!invoice) return { message: 'Invoice not found.' };
 
     await prisma.invoice.delete({ where: { id: invoiceId } });
 
     await writeAuditLog({
-      userId: session.user.id,
+      userId,
       action: 'DELETE',
       target: 'INVOICE',
       targetId: invoiceId,

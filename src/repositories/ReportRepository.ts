@@ -15,7 +15,7 @@ export class ReportRepository {
             totalRevenue: invoices.filter(inv => inv.status === 'PAID').reduce((sum, inv) => sum + inv.total, 0),
             totalInvoices: invoices.length,
             paidInvoices: invoices.filter(inv => inv.status === 'PAID').length,
-            pendingInvoices: invoices.filter(inv => inv.status === 'PENDING').length,
+            pendingInvoices: invoices.filter(inv => inv.status === 'SENT' || inv.status === 'PARTIALLY_PAID' || inv.status === 'OVERDUE').length,
             overdueInvoices: invoices.filter(inv => inv.status === 'OVERDUE').length,
         };
     }

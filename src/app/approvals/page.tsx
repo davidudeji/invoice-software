@@ -3,17 +3,16 @@
 import { AppSidebar } from "@/components/Layout/AppSidebar";
 import { useInvoiceStore } from "@/lib/store";
 import { ApprovalWorkflow } from "@/components/Invoices/ApprovalWorkflow";
-import { Invoice } from "@/types";
 import { useState } from "react";
-import { CheckCircle, Clock, Filter } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 export default function ApprovalsPage() {
     const { invoices, clients } = useInvoiceStore();
     const [filter, setFilter] = useState<'pending' | 'all'>('pending');
 
     const filteredInvoices = invoices.filter(inv => {
-        if (filter === 'pending') return inv.approvalStatus === 'pending';
-        return inv.approvalStatus !== 'draft';
+        if (filter === 'pending') return inv.status === 'SENT';
+        return inv.status !== 'DRAFT';
     });
 
     return (

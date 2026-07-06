@@ -1,18 +1,23 @@
 "use client";
 
-import { useInvoiceStore } from "@/lib/store";
+import { useEffect, useState } from "react";
 import { Eye, MoreHorizontal, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { getInvoices } from "@/app/actions/invoices";
+import type { Invoice, Client } from "@prisma/client";
+
+type InvoiceWithClient = Invoice & { client: Pick<Client, "name" | "email"> };
 
 export function RecentInvoicesTable() {
-    const { invoices, clients } = useInvoiceStore();
+    const [invoices, setInvoices] = useState<InvoiceWithClient[]>([]);
 
-    // Sort by date (desc) and take top 5
-    const recentInvoices = [...invoices]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5);
+    useEffect(() => {
+        void getInvoices({ page: 1, pageSize: 5 }).then((result) => {
+            setInvoices(result.invoices as InvoiceWithClient[]);
+        });
+    }, []);
 
-    if (recentInvoices.length === 0) {
+    if (invoices.length === 0) {
         return (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
                 <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -49,12 +54,10 @@ export function RecentInvoicesTable() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {recentInvoices.map((inv) => (
+                        {invoices.map((inv) => (
                             <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors group">
                                 <td className="px-6 py-4 font-medium text-slate-900">{inv.number}</td>
-                                <td className="px-6 py-4 text-slate-600">
-                                    {clients.find(c => c.id === inv.clientId)?.name}
-                                </td>
+                                <td className="px-6 py-4 text-slate-600">{inv.client.name}</td>
                                 <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
                                     {new Date(inv.dueDate).toLocaleDateString()}
                                 </td>
@@ -62,20 +65,15 @@ export function RecentInvoicesTable() {
                                     ${inv.total.toFixed(2)}
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize
-                                        ${inv.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
-                                            inv.status === 'overdue' ? 'bg-rose-100 text-rose-700' :
-                                                inv.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-slate-100 text-slate-600'}
-                                    `}>
-                                        {inv.status}
+                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize ${inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : inv.status === 'OVERDUE' ? 'bg-rose-100 text-rose-700' : inv.status === 'SENT' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                        {inv.status.toLowerCase()}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
+                                        <Link href={`/invoices/${inv.id}`} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
                                             <Eye size={16} />
-                                        </button>
+                                        </Link>
                                         <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
                                             <MoreHorizontal size={16} />
                                         </button>

@@ -6,14 +6,24 @@ import { Invoice, InvoiceItem } from "@/types";
 import { InvoiceItemsList } from "./InvoiceItemsList";
 import { Save, Send, AlertCircle, CheckCircle } from "lucide-react";
 
+type InvoiceFormData = Partial<Invoice> & {
+    items?: InvoiceItem[];
+    clientId?: string;
+    dueDate?: Date | string;
+    subtotal?: number;
+    taxAmount?: number;
+    total?: number;
+    taxRate?: number;
+};
+
 interface InvoiceFormProps {
-    data: Partial<Invoice>;
-    onChange: (data: Partial<Invoice>) => void;
+    data: InvoiceFormData;
+    onChange: (data: InvoiceFormData) => void;
     onSave: () => void;
 }
 
 export function InvoiceForm({ data, onChange, onSave }: InvoiceFormProps) {
-    const { clients, purchaseOrders } = useInvoiceStore();
+    const { clients } = useInvoiceStore();
 
     // Auto-match status check
     const [matchHint, setMatchHint] = useState<{ status: 'matched' | 'mismatched' | 'none', poNumber?: string }>({ status: 'none' });
@@ -22,9 +32,11 @@ export function InvoiceForm({ data, onChange, onSave }: InvoiceFormProps) {
     // Actually, the parent calculates totals or we do it here. 
     // Let's assume data comes in with items, we calculate totals and push back up.
 
-    const { clientId, items = [], dueDate } = data;
+    const clientId = data.clientId;
+    const items = data.items ?? [];
+    const dueDate = data.dueDate;
 
-    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const taxRate = 10;
     const taxAmount = subtotal * (taxRate / 100);
     const total = subtotal + taxAmount;
@@ -49,25 +61,8 @@ export function InvoiceForm({ data, onChange, onSave }: InvoiceFormProps) {
             return;
         }
 
-        const matchedPO = purchaseOrders.find(po =>
-            po.vendorId === clientId &&
-            Math.abs(po.totalAmount - total) < (total * 0.01) // 1% tolerance
-        );
-
-        if (matchedPO) {
-            setMatchHint({ status: 'matched', poNumber: matchedPO.number });
-            onChange({ ...data, matchStatus: 'matched' });
-        } else {
-            const hasOpenPO = purchaseOrders.some(po => po.vendorId === clientId && po.status === 'open');
-            if (hasOpenPO) {
-                setMatchHint({ status: 'mismatched' });
-                onChange({ ...data, matchStatus: 'mismatched' });
-            } else {
-                setMatchHint({ status: 'none' });
-                onChange({ ...data, matchStatus: 'unmatched' });
-            }
-        }
-    }, [clientId, total, purchaseOrders.length]); // Added purchaseOrders.length specifically to avoid deep dep issues, though purchaseOrders ref should be stable
+        setMatchHint({ status: 'none' });
+    }, [clientId, total]);
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6 h-fit">
@@ -106,8 +101,8 @@ export function InvoiceForm({ data, onChange, onSave }: InvoiceFormProps) {
                         <input
                             type="date"
                             className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm"
-                            value={dueDate || ""}
-                            onChange={(e) => onChange({ ...data, dueDate: e.target.value })}
+                            value={dueDate instanceof Date ? dueDate.toISOString().split('T')[0] : (dueDate || "")}
+                            onChange={(e) => onChange({ ...data, dueDate: new Date(e.target.value) })}
                         />
                     </div>
                 </div>

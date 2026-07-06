@@ -4,9 +4,15 @@ import { prisma } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { InvoiceStatus } from '@prisma/client';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-06-30.basil',
-});
+function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not configured');
+  }
+
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2026-01-28.clover',
+  });
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -19,6 +25,7 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event;
 
   try {
+    const stripe = getStripeClient();
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);

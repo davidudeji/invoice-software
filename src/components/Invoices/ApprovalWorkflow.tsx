@@ -1,16 +1,16 @@
 "use client";
 
-import { useInvoiceStore } from "@/lib/store";
-import { Invoice } from "@/types";
 import { CheckCircle, XCircle, AlertTriangle, Clock } from "lucide-react";
 import { useState } from "react";
 
 interface ApprovalWorkflowProps {
-    invoice: Invoice;
+    invoice: {
+        id: string;
+        status: string;
+    };
 }
 
 export function ApprovalWorkflow({ invoice }: ApprovalWorkflowProps) {
-    const { approveInvoice, rejectInvoice, submitForApproval } = useInvoiceStore();
     const [isApproving, setIsApproving] = useState(false);
 
     // Mocking a "Manager" view for demonstration
@@ -20,22 +20,17 @@ export function ApprovalWorkflow({ invoice }: ApprovalWorkflowProps) {
     const handleApprove = () => {
         setIsApproving(true);
         setTimeout(() => {
-            approveInvoice(invoice.id);
             setIsApproving(false);
         }, 800);
     };
 
     const handleReject = () => {
         if (confirm("Are you sure you want to reject this invoice?")) {
-            rejectInvoice(invoice.id);
+            // Placeholder for future approval workflow integration.
         }
     };
 
-    const handleSubmit = () => {
-        submitForApproval(invoice.id);
-    };
-
-    if (invoice.approvalStatus === 'draft') return null;
+    if (invoice.status === 'DRAFT') return null;
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -45,17 +40,17 @@ export function ApprovalWorkflow({ invoice }: ApprovalWorkflowProps) {
 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    {invoice.approvalStatus === 'approved' && (
+                    {invoice.status === 'PAID' && (
                         <div className="p-2 bg-green-100 text-green-700 rounded-full">
                             <CheckCircle size={20} />
                         </div>
                     )}
-                    {invoice.approvalStatus === 'rejected' && (
+                    {invoice.status === 'OVERDUE' && (
                         <div className="p-2 bg-red-100 text-red-700 rounded-full">
                             <XCircle size={20} />
                         </div>
                     )}
-                    {invoice.approvalStatus === 'pending' && (
+                    {invoice.status === 'SENT' && (
                         <div className="p-2 bg-amber-100 text-amber-700 rounded-full">
                             <Clock size={20} />
                         </div>
@@ -63,19 +58,15 @@ export function ApprovalWorkflow({ invoice }: ApprovalWorkflowProps) {
 
                     <div>
                         <p className="font-medium text-slate-900 capitalize">
-                            {invoice.approvalStatus === 'pending' ? 'Pending Manager Review' :
-                                invoice.approvalStatus === 'approved' ? 'Approved for Payment' :
-                                    invoice.approvalStatus === 'rejected' ? 'Invoice Rejected' : 'Draft'}
+                            {invoice.status === 'SENT' ? 'Pending Manager Review' : invoice.status === 'PAID' ? 'Approved for Payment' : invoice.status === 'OVERDUE' ? 'Invoice Requires Attention' : 'Draft'}
                         </p>
                         <p className="text-sm text-slate-500">
-                            {invoice.approvalStatus === 'pending' ? 'Waiting for authorization to schedule payment.' :
-                                invoice.approvalStatus === 'approved' ? `Scheduled for ${invoice.scheduledDate ? new Date(invoice.scheduledDate).toLocaleDateString() : 'payment'}` :
-                                    ''}
+                            {invoice.status === 'SENT' ? 'Waiting for authorization to schedule payment.' : invoice.status === 'PAID' ? 'Payment completed and recorded.' : ''}
                         </p>
                     </div>
                 </div>
 
-                {invoice.approvalStatus === 'pending' && canApprove && (
+                {invoice.status === 'SENT' && canApprove && (
                     <div className="flex gap-3">
                         <button
                             onClick={handleReject}
@@ -95,12 +86,12 @@ export function ApprovalWorkflow({ invoice }: ApprovalWorkflowProps) {
             </div>
 
             {/* Smart Warnings */}
-            {invoice.matchStatus === 'mismatched' && invoice.approvalStatus === 'pending' && (
+            {invoice.status === 'OVERDUE' && (
                 <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3">
                     <AlertTriangle size={18} className="text-red-600 mt-0.5" />
                     <div className="text-sm text-red-800">
-                        <p className="font-semibold">Mismatch Detected</p>
-                        <p>This invoice does not match the Purchase Order amount. Please review carefully before approving.</p>
+                        <p className="font-semibold">Action Required</p>
+                        <p>This invoice is overdue and should be followed up promptly.</p>
                     </div>
                 </div>
             )}

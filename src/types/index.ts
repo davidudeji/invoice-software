@@ -64,6 +64,18 @@ export interface InvoiceFilterState {
   dateTo: string;
 }
 
+export interface Ebook {
+  id: string;
+  title: string;
+  author: string;
+  price: number;
+  description?: string;
+  coverUrl?: string;
+  fileUrl?: string;
+  status: 'draft' | 'published';
+  createdAt: string;
+}
+
 // ─────────────────────────────────────────────
 // Dashboard
 // ─────────────────────────────────────────────

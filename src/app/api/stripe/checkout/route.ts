@@ -3,9 +3,15 @@ import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-06-30.basil',
-});
+function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not configured');
+  }
+
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2026-01-28.clover',
+  });
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -31,6 +37,7 @@ export async function POST(req: NextRequest) {
   const currency = (settings?.currency || 'USD').toLowerCase();
 
   try {
+    const stripe = getStripeClient();
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',

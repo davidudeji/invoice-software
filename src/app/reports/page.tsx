@@ -25,7 +25,7 @@ export default async function ReportsPage() {
 
     const totalInvoices = invoices.length;
     const paidInvoices = invoices.filter(inv => inv.status === 'PAID').length;
-    const pendingInvoices = invoices.filter(inv => inv.status === 'PENDING').length;
+    const pendingInvoices = invoices.filter(inv => inv.status === 'SENT' || inv.status === 'PARTIALLY_PAID' || inv.status === 'OVERDUE').length;
 
     // --- Chart Data Preparation (Last 6 Months) ---
     const today = new Date();

@@ -20,7 +20,7 @@ export const CustomerUpdateSchema = CustomerCreateSchema.partial();
 export const InvoiceItemSchema = z.object({
     description: z.string().min(1, 'Description is required'),
     quantity: z.number().positive(),
-    price: z.number().positive(),
+    unitPrice: z.number().positive(),
     productId: z.string().optional()
 });
 
@@ -29,7 +29,7 @@ export const InvoiceCreateSchema = z.object({
     number: z.string().min(1),
     date: z.coerce.date(),
     dueDate: z.coerce.date(),
-    status: z.enum(['DRAFT', 'PENDING', 'PAID', 'OVERDUE']).default('PENDING'),
+    status: z.enum(['DRAFT', 'SENT', 'PAID', 'PARTIALLY_PAID', 'OVERDUE', 'CANCELLED']).default('DRAFT'),
     paymentTerms: z.string().optional(),
     notes: z.string().optional(),
     items: z.array(InvoiceItemSchema).min(1, 'At least one item is required'),
