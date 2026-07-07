@@ -20,6 +20,8 @@ import {
   ExternalLink,
   Loader2,
   ArrowUpRight,
+  Link2,
+  Copy,
 } from "lucide-react";
 import { InvoiceStatus } from "@prisma/client";
 import type {
@@ -134,6 +136,17 @@ export function InvoiceDetailClient({ invoice, settings, paymentStatus }: Props)
     }
   };
 
+  const handleCopyPayLink = async () => {
+    const baseUrl = window.location.origin;
+    const payUrl = `${baseUrl}/invoice/${invoice.id}`;
+    try {
+      await navigator.clipboard.writeText(payUrl);
+      showToast("success", "Payment link copied to clipboard!");
+    } catch {
+      showToast("error", "Could not copy link — please copy it manually.");
+    }
+  };
+
   const canMarkPaid = !["PAID", "CANCELLED"].includes(invoice.status);
   const canSend = !["PAID", "CANCELLED"].includes(invoice.status);
   const canDelete = invoice.status === "DRAFT";
@@ -185,6 +198,27 @@ export function InvoiceDetailClient({ invoice, settings, paymentStatus }: Props)
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
+          {/* Share pay link */}
+          <button
+            id="copy-pay-link-btn"
+            onClick={handleCopyPayLink}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-xl transition-colors"
+            title="Copy client payment link"
+          >
+            <Copy size={14} />
+            Copy Pay Link
+          </button>
+          <Link
+            id="open-pay-page-btn"
+            href={`/invoice/${invoice.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-xl transition-colors"
+            title="Open public pay page"
+          >
+            <Link2 size={14} />
+            Pay Page
+          </Link>
           {canSend && (
             <button
               id="resend-email-btn"

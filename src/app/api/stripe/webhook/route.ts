@@ -50,6 +50,9 @@ export async function POST(req: NextRequest) {
             paidAt: new Date(),
             stripePaymentIntentId: session.payment_intent as string,
           },
+          include: {
+            items: { select: { productId: true, quantity: true } },
+          },
         });
 
         // Record payment
@@ -77,6 +80,24 @@ export async function POST(req: NextRequest) {
               notes: `Stripe payment — session ${session.id}`,
             },
           });
+        }
+
+        // Deduct stock for product-linked line items
+        for (const item of invoice.items) {
+          if (item.productId) {
+            const product = await tx.product.findUnique({
+              where: { id: item.productId },
+              select: { stockQuantity: true },
+            });
+            if (product && product.stockQuantity > 0) {
+              await tx.product.update({
+                where: { id: item.productId },
+                data: {
+                  stockQuantity: Math.max(0, product.stockQuantity - item.quantity),
+                },
+              });
+            }
+          }
         }
       });
 
