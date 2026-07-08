@@ -10,12 +10,64 @@ type InvoiceWithClient = Invoice & { client: Pick<Client, "name" | "email"> };
 
 export function RecentInvoicesTable() {
     const [invoices, setInvoices] = useState<InvoiceWithClient[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        void getInvoices({ page: 1, pageSize: 5 }).then((result) => {
-            setInvoices(result.invoices as InvoiceWithClient[]);
-        });
+        let isMounted = true;
+        
+        const fetchInvoices = async () => {
+            try {
+                setIsLoading(true);
+                const result = await getInvoices({ page: 1, pageSize: 5 });
+                if (isMounted && result?.invoices) {
+                    setInvoices(result.invoices as InvoiceWithClient[]);
+                    setError(null);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setError(err instanceof Error ? err.message : 'Failed to load invoices');
+                    setInvoices([]);
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+        
+        fetchInvoices();
+        
+        return () => {
+            isMounted = false;
+        };
     }, []);
+
+    if (error) {
+        return (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+                <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ArrowUpRight size={24} className="text-red-300" />
+                </div>
+                <h3 className="text-slate-900 font-medium mb-1">Error loading invoices</h3>
+                <p className="text-slate-500 text-sm mb-4">{error}</p>
+                <button onClick={() => window.location.reload()} className="text-indigo-600 text-sm font-semibold hover:underline">
+                    Retry &rarr;
+                </button>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+                <div className="animate-pulse flex flex-col items-center">
+                    <div className="h-12 w-12 bg-slate-200 rounded-full mb-4"></div>
+                    <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                </div>
+            </div>
+        );
+    }
 
     if (invoices.length === 0) {
         return (
