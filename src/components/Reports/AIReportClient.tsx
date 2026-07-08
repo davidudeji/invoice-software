@@ -124,7 +124,7 @@ export function AIReportClient({ initialData }: Props) {
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
                 <Tooltip
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px' }}
-                  formatter={(v: number) => [fmt(v), 'Revenue']}
+                  formatter={(value: number | string) => [fmt(Number(value || 0)), 'Revenue']}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2.5} fill="url(#revenueGrad)" dot={{ fill: '#6366f1', r: 3 }} />
               </AreaChart>
@@ -150,7 +150,7 @@ export function AIReportClient({ initialData }: Props) {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} width={90} />
                 <Tooltip
                   contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px' }}
-                  formatter={(v: number) => [fmt(v), 'Revenue']}
+                  formatter={(value: number | string) => [fmt(Number(value || 0)), 'Revenue']}
                 />
                 <Bar dataKey="revenue" fill="#6366f1" radius={[0, 6, 6, 0]} />
               </BarChart>

@@ -1,6 +1,8 @@
 "use client";
 
-import { LucideIcon } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
+
+type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number }>;
 
 interface StatCardProps {
     label: string;
