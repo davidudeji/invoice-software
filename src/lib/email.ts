@@ -6,12 +6,12 @@ import type { Invoice, InvoiceItem, Client, Settings } from '@prisma/client';
 // ─────────────────────────────────────────────
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: process.env.EMAIL_PORT === '465',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_PORT === '465',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
@@ -186,8 +186,8 @@ export async function sendInvoiceEmail(
   invoice: InvoiceWithRelations,
   settings: Settings | null
 ): Promise<void> {
-  if (!process.env.EMAIL_USER) {
-    console.warn('[email] EMAIL_USER not set — skipping email dispatch');
+  if (!process.env.SMTP_USER) {
+    console.warn('[email] SMTP_USER not set — skipping email dispatch');
     return;
   }
 
@@ -196,7 +196,7 @@ export async function sendInvoiceEmail(
 
   try {
     await transporter.sendMail({
-      from: `"${businessName}" <${process.env.EMAIL_USER}>`,
+      from: `"${businessName}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
       to: invoice.client.email,
       subject: `Invoice ${invoice.number} from ${businessName} — ${currency} ${invoice.total.toFixed(2)} due ${new Date(invoice.dueDate).toLocaleDateString()}`,
       html: buildInvoiceEmailHTML(invoice, settings),
