@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { sessionStorageAdapter } from '@/lib/stores/session-storage-adapter';
 import {
   InvoiceBuilderItem,
   InvoiceBuilderState,
@@ -65,59 +67,90 @@ const BUILDER_DEFAULTS: InvoiceBuilderState = {
   total: 0,
 };
 
-export const useInvoiceBuilderStore = create<InvoiceBuilderStore>((set) => ({
-  ...BUILDER_DEFAULTS,
+export const useInvoiceBuilderStore = create<InvoiceBuilderStore>()(
+  persist(
+    (set) => ({
+      ...BUILDER_DEFAULTS,
 
-  setClientId: (clientId) => set({ clientId }),
-  setDate: (date) => set({ date }),
-  setDueDate: (dueDate) => set({ dueDate }),
-  setNotes: (notes) => set({ notes }),
-  setPaymentTerms: (paymentTerms) => set({ paymentTerms }),
+      setClientId: (clientId) => set({ clientId }),
+      setDate: (date) => set({ date }),
+      setDueDate: (dueDate) => set({ dueDate }),
+      setNotes: (notes) => set({ notes }),
+      setPaymentTerms: (paymentTerms) => set({ paymentTerms }),
 
-  setTaxRate: (taxRate) =>
-    set((state) => ({
-      taxRate,
-      ...computeTotals(state.items, taxRate),
-    })),
+      setTaxRate: (taxRate) =>
+        set((state) => ({
+          taxRate,
+          ...computeTotals(state.items, taxRate),
+        })),
 
-  addItem: () =>
-    set((state) => {
-      const items = [...state.items, newItem()];
-      return { items, ...computeTotals(items, state.taxRate) };
+      addItem: () =>
+        set((state) => {
+          const items = [...state.items, newItem()];
+          return { items, ...computeTotals(items, state.taxRate) };
+        }),
+
+      removeItem: (id) =>
+        set((state) => {
+          const items = state.items.filter((item) => item.id !== id);
+          return { items, ...computeTotals(items, state.taxRate) };
+        }),
+
+      updateItem: (id, updates) =>
+        set((state) => {
+          const items = state.items.map((item) => {
+            if (item.id !== id) return item;
+            const merged = { ...item, ...updates };
+            merged.total = merged.quantity * merged.unitPrice;
+            return merged;
+          });
+          return { items, ...computeTotals(items, state.taxRate) };
+        }),
+
+      autofillFromOCR: (data) =>
+        set((state) => {
+          const items = data.items ?? state.items;
+          const taxRate = data.taxRate ?? state.taxRate;
+          return {
+            ...state,
+            ...data,
+            items,
+            taxRate,
+            ...computeTotals(items, taxRate),
+          };
+        }),
+
+      reset: () => set({ ...BUILDER_DEFAULTS, items: [] }),
     }),
-
-  removeItem: (id) =>
-    set((state) => {
-      const items = state.items.filter((item) => item.id !== id);
-      return { items, ...computeTotals(items, state.taxRate) };
-    }),
-
-  updateItem: (id, updates) =>
-    set((state) => {
-      const items = state.items.map((item) => {
-        if (item.id !== id) return item;
-        const merged = { ...item, ...updates };
-        merged.total = merged.quantity * merged.unitPrice;
-        return merged;
-      });
-      return { items, ...computeTotals(items, state.taxRate) };
-    }),
-
-  autofillFromOCR: (data) =>
-    set((state) => {
-      const items = data.items ?? state.items;
-      const taxRate = data.taxRate ?? state.taxRate;
-      return {
-        ...state,
-        ...data,
-        items,
-        taxRate,
-        ...computeTotals(items, taxRate),
-      };
-    }),
-
-  reset: () => set({ ...BUILDER_DEFAULTS, items: [] }),
-}));
+    {
+      name: 'invoicepay-invoice-draft',
+      storage: sessionStorageAdapter,
+      // Persist only the editable draft fields — not computed totals.
+      // Totals are re-derived on rehydration via updateItem / setTaxRate.
+      partialize: (state) => ({
+        clientId: state.clientId,
+        date: state.date,
+        dueDate: state.dueDate,
+        taxRate: state.taxRate,
+        notes: state.notes,
+        paymentTerms: state.paymentTerms,
+        items: state.items,
+      }),
+      // Re-compute totals after rehydrating from sessionStorage
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const { subtotal, taxAmount, total } = computeTotals(
+            state.items,
+            state.taxRate
+          );
+          state.subtotal = subtotal;
+          state.taxAmount = taxAmount;
+          state.total = total;
+        }
+      },
+    }
+  )
+);
 
 // ─────────────────────────────────────────────
 // PRODUCT FILTER STORE
@@ -257,47 +290,69 @@ interface InvoiceStoreState {
   deleteEbook: (id: string) => void;
 }
 
-export const useInvoiceStore = create<InvoiceStoreState>((set) => ({
-  products: [],
-  categories: [],
-  clients: [],
-  invoices: [],
-  cart: [],
-  ebooks: [],
-  addProduct: (product) => set((state) => ({ products: [product, ...state.products] })),
-  addInvoice: (invoice) => set((state) => ({ invoices: [invoice, ...state.invoices] })),
-  addToCart: (item) =>
-    set((state) => {
-      const exists = state.cart.find((entry) => entry.productId === item.productId);
-      if (exists) {
-        return {
-          cart: state.cart.map((entry) =>
-            entry.productId === item.productId ? { ...entry, quantity: entry.quantity + item.quantity } : entry
+export const useInvoiceStore = create<InvoiceStoreState>()(
+  persist(
+    (set) => ({
+      products: [],
+      categories: [],
+      clients: [],
+      invoices: [],
+      cart: [],
+      ebooks: [],
+      addProduct: (product) => set((state) => ({ products: [product, ...state.products] })),
+      addInvoice: (invoice) => set((state) => ({ invoices: [invoice, ...state.invoices] })),
+      addToCart: (item) =>
+        set((state) => {
+          const exists = state.cart.find((entry) => entry.productId === item.productId);
+          if (exists) {
+            return {
+              cart: state.cart.map((entry) =>
+                entry.productId === item.productId ? { ...entry, quantity: entry.quantity + item.quantity } : entry
+              ),
+            };
+          }
+          return { cart: [...state.cart, item] };
+        }),
+      removeFromCart: (productId) =>
+        set((state) => ({ cart: state.cart.filter((entry) => entry.productId !== productId) })),
+      updateCartQuantity: (productId, quantity) =>
+        set((state) => ({
+          cart:
+            quantity <= 0
+              ? state.cart.filter((entry) => entry.productId !== productId)
+              : state.cart.map((entry) =>
+                  entry.productId === productId ? { ...entry, quantity } : entry
+                ),
+        })),
+      clearCart: () => set({ cart: [] }),
+      approveInvoice: (id) =>
+        set((state) => ({
+          invoices: state.invoices.map((invoice) =>
+            invoice.id === id ? { ...invoice, approvalStatus: 'approved' } : invoice
           ),
-        };
-      }
-      return { cart: [...state.cart, item] };
+        })),
+      rejectInvoice: (id) =>
+        set((state) => ({
+          invoices: state.invoices.map((invoice) =>
+            invoice.id === id ? { ...invoice, approvalStatus: 'rejected' } : invoice
+          ),
+        })),
+      submitForApproval: (id) =>
+        set((state) => ({
+          invoices: state.invoices.map((invoice) =>
+            invoice.id === id ? { ...invoice, approvalStatus: 'pending' } : invoice
+          ),
+        })),
+      addEbook: (ebook) => set((state) => ({ ebooks: [ebook, ...state.ebooks] })),
+      deleteEbook: (id) =>
+        set((state) => ({ ebooks: state.ebooks.filter((ebook) => ebook.id !== id) })),
     }),
-  removeFromCart: (productId) => set((state) => ({ cart: state.cart.filter((entry) => entry.productId !== productId) })),
-  updateCartQuantity: (productId, quantity) =>
-    set((state) => ({
-      cart: quantity <= 0
-        ? state.cart.filter((entry) => entry.productId !== productId)
-        : state.cart.map((entry) => (entry.productId === productId ? { ...entry, quantity } : entry)),
-    })),
-  clearCart: () => set({ cart: [] }),
-  approveInvoice: (id) =>
-    set((state) => ({
-      invoices: state.invoices.map((invoice) => (invoice.id === id ? { ...invoice, approvalStatus: 'approved' } : invoice)),
-    })),
-  rejectInvoice: (id) =>
-    set((state) => ({
-      invoices: state.invoices.map((invoice) => (invoice.id === id ? { ...invoice, approvalStatus: 'rejected' } : invoice)),
-    })),
-  submitForApproval: (id) =>
-    set((state) => ({
-      invoices: state.invoices.map((invoice) => (invoice.id === id ? { ...invoice, approvalStatus: 'pending' } : invoice)),
-    })),
-  addEbook: (ebook) => set((state) => ({ ebooks: [ebook, ...state.ebooks] })),
-  deleteEbook: (id) => set((state) => ({ ebooks: state.ebooks.filter((ebook) => ebook.id !== id) })),
-}));
+    {
+      name: 'invoicepay-cart',
+      storage: sessionStorageAdapter,
+      // Only the cart survives a page refresh.
+      // Products, clients, invoices come from the server on each load.
+      partialize: (state) => ({ cart: state.cart }),
+    }
+  )
+);
