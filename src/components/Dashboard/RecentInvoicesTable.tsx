@@ -51,7 +51,7 @@ export function RecentInvoicesTable() {
                 </div>
                 <h3 className="text-slate-900 font-medium mb-1">Error loading invoices</h3>
                 <p className="text-slate-500 text-sm mb-4">{error}</p>
-                <button onClick={() => window.location.reload()} className="text-indigo-600 text-sm font-semibold hover:underline">
+                <button onClick={() => window.location.reload()} className="text-sm font-semibold hover:underline" style={{ color: "#1469F8" }}>
                     Retry &rarr;
                 </button>
             </div>
@@ -77,7 +77,7 @@ export function RecentInvoicesTable() {
                 </div>
                 <h3 className="text-slate-900 font-medium mb-1">No invoices yet</h3>
                 <p className="text-slate-500 text-sm mb-4">Create your first invoice to get started now.</p>
-                <Link href="/invoices/new" className="text-indigo-600 text-sm font-semibold hover:underline">
+                <Link href="/invoices/new" className="text-sm font-semibold hover:underline" style={{ color: "#1469F8" }}>
                     Create Invoice &rarr;
                 </Link>
             </div>
@@ -88,7 +88,7 @@ export function RecentInvoicesTable() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
                 <h3 className="font-bold text-slate-800">Recent Invoices</h3>
-                <Link href="/invoices" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 hover:underline">
+                <Link href="/invoices" className="text-xs font-semibold hover:underline" style={{ color: "#1469F8" }}>
                     View All
                 </Link>
             </div>
@@ -117,7 +117,7 @@ export function RecentInvoicesTable() {
                                     ${inv.total.toFixed(2)}
                                 </td>
                                 <td className="px-6 py-4 text-center">
-                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize ${inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : inv.status === 'OVERDUE' ? 'bg-rose-100 text-rose-700' : inv.status === 'SENT' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium capitalize ${inv.status === 'PAID' ? 'bg-[#EBF2FF] text-[#0B44C2]' : inv.status === 'OVERDUE' ? 'bg-red-50 text-red-700' : inv.status === 'SENT' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-600'}`}>
                                         {inv.status.toLowerCase()}
                                     </span>
                                 </td>

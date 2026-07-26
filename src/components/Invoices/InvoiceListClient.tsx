@@ -83,7 +83,7 @@ export function InvoiceListClient({ initialInvoices, clients, total, currentPage
             placeholder="Search invoice # or client name…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1469F8]/20 focus:border-[#1469F8]/60"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ export function InvoiceListClient({ initialInvoices, clients, total, currentPage
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-white"
+            className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1469F8]/20 focus:border-[#1469F8]/60 bg-white"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -133,7 +133,8 @@ export function InvoiceListClient({ initialInvoices, clients, total, currentPage
                       <td>
                         <Link
                           href={`/invoices/${invoice.id}`}
-                          className="font-semibold text-indigo-600 hover:text-indigo-700"
+                          className="font-semibold hover:underline"
+                          style={{ color: "#1469F8", fontFamily: '"IBM Plex Mono", monospace', fontSize: "0.8rem" }}
                         >
                           {invoice.number}
                         </Link>
@@ -144,7 +145,7 @@ export function InvoiceListClient({ initialInvoices, clients, total, currentPage
                       </td>
                       <td className={`text-xs ${isOverdue ? "text-red-500 font-medium" : "text-slate-500"}`}>
                         {new Date(invoice.dueDate).toLocaleDateString()}
-                        {isOverdue && " ⚠"}
+                        {isOverdue && " (overdue)"}
                       </td>
                       <td>
                         <span className={`badge ${STATUS_STYLE[invoice.status]}`}>
@@ -158,8 +159,11 @@ export function InvoiceListClient({ initialInvoices, clients, total, currentPage
                         <div className="flex items-center justify-center gap-1">
                           <Link
                             href={`/invoices/${invoice.id}`}
-                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 rounded-lg transition-colors"
+                            style={{}}
                             title="View"
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#1469F8"; (e.currentTarget as HTMLElement).style.background = "rgba(20,105,248,0.06)"; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = ""; (e.currentTarget as HTMLElement).style.background = ""; }}
                           >
                             <Eye size={15} />
                           </Link>

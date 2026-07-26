@@ -22,8 +22,12 @@ export function CashFlowChart() {
                     <div key={i} className="flex-1 flex flex-col justify-end gap-2 group cursor-pointer h-full">
                         <div className="w-full bg-slate-50 rounded-t-lg relative overflow-hidden flex-1 flex items-end">
                             <div
-                                className="w-full bg-indigo-500 rounded-t-lg transition-all duration-700 ease-out group-hover:bg-indigo-600"
-                                style={{ height: `${item.value}%` }}
+                                className="w-full rounded-t-lg transition-all duration-700 ease-out"
+                                style={{
+                                  height: `${item.value}%`,
+                                  background: "#1469F8",
+                                  opacity: 0.8 + i * 0.03,
+                                }}
                             />
                         </div>
                         <p className="text-xs text-center text-slate-500 font-medium">

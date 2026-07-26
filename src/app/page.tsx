@@ -339,12 +339,12 @@ export default function LandingPage() {
                     { num: "INV-2024-0290", client: "Atlas & Stone",         amt: "$1,850.00", status: "Sent" },
                     { num: "INV-2024-0289", client: "HarborPeak Logistics",  amt: "$6,500.00", status: "Overdue" },
                   ].map((row) => {
-                    const statusColor =
+                    const statusColor: React.CSSProperties =
                       row.status === "Paid"
-                        ? { bg: "rgba(20,105,248,0.1)", c: "#1469F8" }
+                        ? { background: "rgba(20,105,248,0.1)", color: "#1469F8" }
                         : row.status === "Sent"
-                        ? { bg: "rgba(14,165,233,0.1)", c: "#0EA5E9" }
-                        : { bg: "rgba(239,68,68,0.1)", c: "#EF4444" };
+                        ? { background: "rgba(14,165,233,0.1)", color: "#0EA5E9" }
+                        : { background: "rgba(239,68,68,0.1)", color: "#EF4444" };
                     return (
                       <div
                         key={row.num}
