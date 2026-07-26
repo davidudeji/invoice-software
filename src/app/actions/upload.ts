@@ -34,8 +34,9 @@ export async function getLogoUploadUrl(
   const key = `logos/${session.user.id}/logo-${Date.now()}.${ext}`;
 
   try {
-    const { uploadUrl, publicUrl } = await getUploadPresignedUrl(key, validated.data.contentType);
-    return { success: true, uploadUrl, publicUrl };
+    const result = await getUploadPresignedUrl(key, validated.data.contentType);
+    if (!result) return { message: 'Cloud storage is not configured.' };
+    return { success: true, uploadUrl: result.uploadUrl, publicUrl: result.publicUrl };
   } catch (error) {
     console.error('getLogoUploadUrl:', error);
     return { message: 'Failed to generate upload URL.' };
