@@ -4,11 +4,11 @@ import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | InvoicePay",
-    default: "InvoicePay — Cloud Invoice & Sales Management",
+    template: "%s | Fintra",
+    default: "Fintra — Invoice, Collect, Grow",
   },
   description:
-    "Professional invoice management, sales tracking, and AI-powered business analytics — all in one place.",
+    "Professional invoicing, payment tracking, and financial reporting for modern businesses. Send invoices, collect payments, and understand your cash flow in one workspace.",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-50 antialiased">
+      <body className="min-h-screen antialiased" style={{ background: "#F9FAFB" }}>
         <Providers>{children}</Providers>
       </body>
     </html>

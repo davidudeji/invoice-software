@@ -1,47 +1,52 @@
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────
-   Design Tokens
+   Design Tokens — Fintra
 ───────────────────────────────────────────── */
 :root {
-  --font-display: "Lora", serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-display: "Syne", system-ui, sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
 
-  /* Brand - Slate Navy */
-  --color-primary: 31 41 55; /* slate-navy-900 */
-  --color-primary-dark: 17 24 39; /* slate-navy-darker */
-  --color-primary-light: 55 65 81; /* slate-navy-lighter */
+  /* Fintra Electric Blue */
+  --color-blue: 20 105 248;         /* #1469F8 */
+  --color-blue-dark: 11 68 194;     /* #0B44C2 */
+  --color-blue-light: 56 132 255;   /* #3884FF */
+  --color-blue-muted: 235 242 255;  /* #EBF2FF */
 
-  /* Accent - Emerald */
-  --color-accent: 16 185 129; /* emerald-500 */
-  --color-accent-dark: 5 150 105; /* emerald-600 */
-  --color-accent-light: 132 204 22; /* emerald-400 */
-
-  /* Surface - Warm Paper & Soft Slate */
-  --color-surface: 250 250 248; /* warm-paper */
-  --color-surface-muted: 243 244 246; /* soft-slate */
-  --color-border: 229 231 235; /* slate-200 */
+  /* Neutral Scale */
+  --color-ink: 10 10 10;            /* #0A0A0A — near-black */
+  --color-ink-secondary: 31 31 35;  /* #1F1F23 */
+  --color-surface: 249 250 251;     /* #F9FAFB */
+  --color-surface-raised: 255 255 255; /* #FFFFFF */
+  --color-border: 229 231 235;      /* #E5E7EB */
+  --color-border-strong: 209 213 219; /* #D1D5DB */
 
   /* Text */
-  --color-text: 31 41 55; /* slate-800 */
-  --color-text-muted: 107 114 128; /* slate-500 */
-  --color-text-subtle: 156 163 175; /* slate-400 */
+  --color-text: 31 31 35;           /* #1F1F23 */
+  --color-text-secondary: 107 114 128; /* #6B7280 */
+  --color-text-subtle: 156 163 175; /* #9CA3AF */
+
+  /* Semantic */
+  --color-success: 16 185 129;      /* emerald-500 */
+  --color-warning: 245 158 11;      /* amber-500 */
+  --color-danger: 239 68 68;        /* red-500 */
 }
 
 /* ─────────────────────────────────────────────
    Base Resets
 ───────────────────────────────────────────── */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -50,55 +55,36 @@ body {
   background: rgb(var(--color-surface));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 /* ─────────────────────────────────────────────
-   Typography Scale
+   Typography
 ───────────────────────────────────────────── */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-weight: 600;
-  color: rgb(var(--color-text));
+  font-weight: 700;
+  color: rgb(var(--color-ink));
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
-h1 {
-  @apply text-5xl;
-}
+h1 { font-size: clamp(2.25rem, 5vw, 3.75rem); }
+h2 { font-size: clamp(1.75rem, 3.5vw, 2.5rem); }
+h3 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+h4 { font-size: 1.25rem; }
 
-h2 {
-  @apply text-4xl;
-}
-
-h3 {
-  @apply text-3xl;
-}
-
-h4 {
-  @apply text-2xl;
-}
-
-code,
-pre {
+code, pre {
   font-family: var(--font-mono);
 }
 
 /* ─────────────────────────────────────────────
-   Scrollbar Styling
+   Scrollbar
 ───────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--color-border));
+  background: rgb(var(--color-border-strong));
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -106,98 +92,170 @@ pre {
 }
 
 /* ─────────────────────────────────────────────
-   Form Focus Ring
+   Focus Ring
 ───────────────────────────────────────────── */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  box-shadow:
-    0 0 0 2px rgb(var(--color-surface)),
-    0 0 0 4px rgb(var(--color-accent) / 0.5);
+:focus-visible {
+  outline: 2px solid rgb(var(--color-blue));
+  outline-offset: 2px;
 }
 
-input:focus,
-select:focus,
-textarea:focus,
-button:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgb(var(--color-surface-raised)),
+    0 0 0 4px rgb(var(--color-blue) / 0.3);
 }
 
 /* ─────────────────────────────────────────────
    Status Badges
 ───────────────────────────────────────────── */
 .badge {
-  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold tracking-tight;
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-tight;
+}
+
+.badge::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .badge-draft {
-  @apply bg-slate-100 text-slate-700;
-}
-.badge-sent {
   @apply bg-slate-100 text-slate-600;
 }
+.badge-draft::before { background: #94A3B8; }
+
+.badge-sent {
+  @apply bg-sky-50 text-sky-700;
+}
+.badge-sent::before { background: #0EA5E9; }
+
 .badge-paid {
-  @apply bg-emerald-50 text-emerald-700;
+  background: rgb(var(--color-blue-muted));
+  color: rgb(var(--color-blue-dark));
 }
+.badge-paid::before { background: rgb(var(--color-blue)); }
+
 .badge-overdue {
-  @apply bg-rose-50 text-rose-700;
+  @apply bg-red-50 text-red-700;
 }
+.badge-overdue::before { background: #EF4444; }
+
 .badge-cancelled {
   @apply bg-slate-100 text-slate-400;
 }
+.badge-cancelled::before { background: #CBD5E1; }
+
 .badge-partial {
   @apply bg-amber-50 text-amber-700;
 }
+.badge-partial::before { background: #F59E0B; }
 
 /* ─────────────────────────────────────────────
    Card
 ───────────────────────────────────────────── */
 .card {
-  @apply bg-white rounded-lg border border-slate-200 shadow-sm;
+  @apply bg-white rounded-xl border border-slate-200;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
 }
 
 .card-elevated {
-  @apply bg-white rounded-lg border border-slate-200 shadow-md;
+  @apply bg-white rounded-xl border border-slate-200;
+  box-shadow: 0 4px 16px 0 rgb(0 0 0 / 0.08), 0 1px 3px -1px rgb(0 0 0 / 0.04);
 }
 
 /* ─────────────────────────────────────────────
-   Stat Card Gradient
+   Table
 ───────────────────────────────────────────── */
-.stat-gradient-primary {
-  @apply bg-gradient-to-br from-slate-700 to-slate-900;
+.data-table {
+  @apply w-full text-sm;
 }
-.stat-gradient-accent {
-  @apply bg-gradient-to-br from-emerald-500 to-emerald-700;
+.data-table thead tr {
+  @apply border-b border-slate-200;
+  background: #F8FAFC;
 }
-.stat-gradient-amber {
-  @apply bg-gradient-to-br from-amber-400 to-amber-600;
+.data-table thead th {
+  @apply px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider;
 }
-.stat-gradient-rose {
-  @apply bg-gradient-to-br from-rose-400 to-rose-600;
+.data-table tbody tr {
+  @apply border-b border-slate-100 transition-colors;
+}
+.data-table tbody tr:hover {
+  background: rgb(var(--color-blue-muted) / 0.4);
+}
+.data-table tbody td {
+  @apply px-4 py-3.5;
 }
 
 /* ─────────────────────────────────────────────
-   Page Transitions
+   Buttons
 ───────────────────────────────────────────── */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-150 select-none;
 }
 
-.page-enter {
-  animation: fadeIn 0.3s ease forwards;
+.btn-primary {
+  background: rgb(var(--color-ink));
+  color: #fff;
+}
+.btn-primary:hover {
+  background: rgb(var(--color-ink-secondary));
+}
+.btn-primary:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.btn-blue {
+  background: rgb(var(--color-blue));
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(var(--color-blue) / 0.3);
+}
+.btn-blue:hover {
+  background: rgb(var(--color-blue-dark));
+  box-shadow: 0 4px 12px rgb(var(--color-blue) / 0.4);
+}
+.btn-blue:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply bg-slate-100 text-slate-800;
+}
+.btn-secondary:hover {
+  @apply bg-slate-200;
+}
+
+.btn-ghost {
+  @apply text-slate-600;
+}
+.btn-ghost:hover {
+  @apply bg-slate-100;
+}
+
+.btn-outline {
+  @apply border border-slate-200 bg-white text-slate-800;
+}
+.btn-outline:hover {
+  @apply border-slate-300 bg-slate-50;
 }
 
 /* ─────────────────────────────────────────────
-   Sidebar active glow
+   Inputs
+───────────────────────────────────────────── */
+.input {
+  @apply w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 transition-all text-sm;
+}
+.input:focus {
+  border-color: rgb(var(--color-blue));
+}
+.input:disabled {
+  @apply bg-slate-50 text-slate-400 cursor-not-allowed;
+}
+
+/* ─────────────────────────────────────────────
+   Sidebar Active State
 ───────────────────────────────────────────── */
 .nav-active {
   @apply relative;
@@ -209,65 +267,65 @@ button:focus {
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 60%;
-  background: rgb(var(--color-primary-light));
-  border-radius: 0 2px 2px 0;
+  height: 55%;
+  background: rgb(var(--color-blue));
+  border-radius: 0 3px 3px 0;
 }
 
 /* ─────────────────────────────────────────────
-   Table Styles
+   Page Entrance Animation
 ───────────────────────────────────────────── */
-.data-table {
-  @apply w-full text-sm;
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.data-table thead tr {
-  @apply border-b border-slate-200;
-  background: rgb(var(--color-surface-muted));
-}
-.data-table thead th {
-  @apply px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
-}
-.data-table tbody tr {
-  @apply border-b border-slate-100 transition-colors hover:bg-slate-50;
-}
-.data-table tbody td {
-  @apply px-4 py-3.5;
+
+.page-enter {
+  animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ─────────────────────────────────────────────
-   Button Styles
+   Stat Card Accents
 ───────────────────────────────────────────── */
-.btn {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors;
+.stat-gradient-primary {
+  background: linear-gradient(135deg, rgb(var(--color-ink)) 0%, rgb(var(--color-ink-secondary)) 100%);
 }
-
-.btn-primary {
-  @apply bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed;
+.stat-gradient-blue {
+  background: linear-gradient(135deg, rgb(var(--color-blue)) 0%, rgb(var(--color-blue-dark)) 100%);
 }
-
-.btn-accent {
-  @apply bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed;
+.stat-gradient-amber {
+  @apply bg-gradient-to-br from-amber-400 to-amber-600;
 }
-
-.btn-secondary {
-  @apply bg-slate-100 text-slate-900 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.btn-ghost {
-  @apply text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed;
+.stat-gradient-danger {
+  @apply bg-gradient-to-br from-red-500 to-red-700;
 }
 
 /* ─────────────────────────────────────────────
-   Input Styles
+   Fintra Blue Accent Utilities
 ───────────────────────────────────────────── */
-.input {
-  @apply w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 transition-colors;
+.text-fintra-blue { color: rgb(var(--color-blue)); }
+.bg-fintra-blue   { background: rgb(var(--color-blue)); }
+.border-fintra-blue { border-color: rgb(var(--color-blue)); }
+.bg-fintra-blue-muted { background: rgb(var(--color-blue-muted)); }
+
+/* ─────────────────────────────────────────────
+   Landing Page — Specific Utilities
+───────────────────────────────────────────── */
+.landing-section {
+  @apply py-24 px-6;
 }
 
-.input:focus {
-  @apply border-emerald-500 bg-white;
+.section-label {
+  @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest;
+  color: rgb(var(--color-blue));
 }
 
-.input:disabled {
-  @apply bg-slate-50 text-slate-400 cursor-not-allowed;
+/* ─────────────────────────────────────────────
+   Reduced Motion
+───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

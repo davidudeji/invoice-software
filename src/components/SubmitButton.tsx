@@ -11,6 +11,7 @@ interface SubmitButtonProps {
   pendingLabel?: string;
   loadingText?: string;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function SubmitButton({
@@ -19,6 +20,7 @@ export function SubmitButton({
   pendingLabel,
   loadingText,
   className,
+  style,
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const displayText = children ?? text ?? 'Submit';
@@ -28,8 +30,9 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={pending}
+      style={style}
       className={cn(
-        'rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all',
+        'rounded-lg bg-[#0A0A0A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#1F1F23] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1469F8] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all',
         className
       )}
     >

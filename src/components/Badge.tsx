@@ -17,11 +17,11 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const statusStyles: Record<BadgeStatus, string> = {
-  draft: "bg-slate-100 text-slate-700",
-  sent: "bg-slate-100 text-slate-600",
-  paid: "bg-emerald-50 text-emerald-700",
-  overdue: "bg-rose-50 text-rose-700",
-  partial: "bg-amber-50 text-amber-700",
+  draft:     "bg-slate-100 text-slate-600",
+  sent:      "bg-sky-50 text-sky-700",
+  paid:      "bg-[#EBF2FF] text-[#0B44C2]",
+  overdue:   "bg-red-50 text-red-700",
+  partial:   "bg-amber-50 text-amber-700",
   cancelled: "bg-slate-100 text-slate-400",
 };
 
@@ -42,11 +42,11 @@ export function Badge({ status, className, children, ...props }: BadgeProps) {
 
 export function BadgeIndicator({ status }: { status: BadgeStatus }) {
   const colors = {
-    draft: "bg-slate-300",
-    sent: "bg-slate-400",
-    paid: "bg-emerald-500",
-    overdue: "bg-rose-500",
-    partial: "bg-amber-500",
+    draft:     "bg-slate-300",
+    sent:      "bg-sky-400",
+    paid:      "bg-[#1469F8]",
+    overdue:   "bg-red-500",
+    partial:   "bg-amber-500",
     cancelled: "bg-slate-300",
   };
 
