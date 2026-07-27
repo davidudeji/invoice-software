@@ -112,8 +112,8 @@ function LoginForm() {
           <div className="space-y-4">
             {[
               { icon: ShieldCheck, label: "Bank-grade encryption on all data" },
-              { icon: Zap,         label: "Sub-second invoice delivery" },
-              { icon: Globe,       label: "99.98% uptime SLA" },
+              { icon: Zap, label: "Fast invoice delivery" },
+              { icon: Globe, label: "Globally recognized" },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-3">
                 <div
@@ -151,8 +151,8 @@ function LoginForm() {
               <span
                 className="text-xs font-semibold px-2.5 py-1 rounded-full"
                 style={{
-                  background: "rgba(20,105,248,0.2)",
-                  color: "#3884FF",
+                  background: "green",
+                  color: "#fff",
                 }}
               >
                 Paid

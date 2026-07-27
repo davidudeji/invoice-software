@@ -82,9 +82,9 @@ export function DataTable<T>({
             >
               {columns.map((column) => {
                 const value = item[column.key];
-                const rendered = column.render
+                const rendered: React.ReactNode = column.render
                   ? column.render(value, item)
-                  : value;
+                  : (value as React.ReactNode);
 
                 return (
                   <td
