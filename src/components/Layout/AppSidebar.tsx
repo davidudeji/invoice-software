@@ -15,7 +15,7 @@ import {
   X,
   Menu,
   Receipt,
-  CreditCard,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -59,15 +59,17 @@ const navGroups = [
   },
 ];
 
-function FIntraLogo() {
+function FintraLogo() {
   return (
     <div className="flex items-center gap-2.5">
-      {/* Fintra wordmark — SVG-based for crisp rendering */}
       <div
-        className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: "#1469F8" }}
+        className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{
+          background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+          boxShadow: "0 2px 12px rgba(59,130,246,0.4)",
+        }}
       >
-        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+        <svg viewBox="0 0 24 24" fill="none" className="h-4.5 w-4.5" width={18} height={18}>
           <path
             d="M4 6h16M4 6v12M4 6l4-2h12"
             stroke="white"
@@ -75,23 +77,17 @@ function FIntraLogo() {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <path
-            d="M4 12h8"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M14 14l4 4M14 18l4-4"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
+          <path d="M4 12h8" stroke="white" strokeWidth="2" strokeLinecap="round" />
+          <path d="M14 14l4 4M14 18l4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </div>
       <span
-        className="text-base font-bold tracking-tight text-white"
-        style={{ fontFamily: '"Syne", sans-serif', letterSpacing: "-0.01em" }}
+        className="text-base font-bold tracking-tight"
+        style={{
+          fontFamily: '"Syne", sans-serif',
+          letterSpacing: "-0.02em",
+          color: "#f8fafc",
+        }}
       >
         Fintra
       </span>
@@ -109,10 +105,10 @@ export function AppSidebar() {
 
   const SidebarContent = () => (
     <aside
-      className="h-full w-64 flex flex-col border-r"
+      className="h-full w-64 flex flex-col"
       style={{
-        background: "#0A0A0A",
-        borderColor: "rgba(255,255,255,0.07)",
+        background: "#111218",
+        borderRight: "1px solid rgba(255,255,255,0.07)",
       }}
     >
       {/* Logo */}
@@ -120,14 +116,14 @@ export function AppSidebar() {
         className="px-5 py-5 flex items-center justify-between"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
       >
-        <FIntraLogo />
+        <FintraLogo />
         <button
           onClick={() => setMobileOpen(false)}
-          className="md:hidden p-1 rounded-md transition-colors"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          className="md:hidden p-1.5 rounded-lg transition-colors"
+          style={{ color: "rgba(255,255,255,0.35)" }}
           aria-label="Close sidebar"
         >
-          <X size={18} />
+          <X size={17} />
         </button>
       </div>
 
@@ -136,8 +132,8 @@ export function AppSidebar() {
         {navGroups.map((group) => (
           <div key={group.label}>
             <p
-              className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
-              style={{ color: "rgba(255,255,255,0.25)" }}
+              className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest"
+              style={{ color: "rgba(255,255,255,0.22)" }}
             >
               {group.label}
             </p>
@@ -150,32 +146,28 @@ export function AppSidebar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`
-                      group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium
-                      transition-all duration-150 nav-active
-                      ${
-                        active
-                          ? "text-white"
-                          : "hover:text-white"
-                      }
-                    `}
+                    className="nav-active group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
                     style={{
                       background: active
-                        ? "rgba(20, 105, 248, 0.15)"
-                        : undefined,
-                      color: active
-                        ? "#fff"
-                        : "rgba(255,255,255,0.45)",
+                        ? "rgba(59,130,246,0.12)"
+                        : "transparent",
+                      color: active ? "#f8fafc" : "rgba(255,255,255,0.4)",
                     }}
                     onMouseEnter={(e) => {
                       if (!active)
                         (e.currentTarget as HTMLElement).style.background =
                           "rgba(255,255,255,0.05)";
+                      if (!active)
+                        (e.currentTarget as HTMLElement).style.color =
+                          "rgba(255,255,255,0.7)";
                     }}
                     onMouseLeave={(e) => {
-                      if (!active)
+                      if (!active) {
                         (e.currentTarget as HTMLElement).style.background =
                           "transparent";
+                        (e.currentTarget as HTMLElement).style.color =
+                          "rgba(255,255,255,0.4)";
+                      }
                     }}
                   >
                     <span className="flex items-center gap-3">
@@ -183,8 +175,8 @@ export function AppSidebar() {
                         size={16}
                         style={{
                           color: active
-                            ? "#1469F8"
-                            : "rgba(255,255,255,0.35)",
+                            ? "#3b82f6"
+                            : "rgba(255,255,255,0.3)",
                         }}
                       />
                       {item.label}
@@ -192,7 +184,7 @@ export function AppSidebar() {
                     {active && (
                       <ChevronRight
                         size={13}
-                        style={{ color: "rgba(20, 105, 248, 0.7)" }}
+                        style={{ color: "rgba(59,130,246,0.6)" }}
                       />
                     )}
                   </Link>
@@ -209,8 +201,16 @@ export function AppSidebar() {
           href="/invoices/new"
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
           style={{
-            background: "#1469F8",
-            boxShadow: "0 2px 8px rgba(20,105,248,0.35)",
+            background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+            boxShadow: "0 2px 12px rgba(59,130,246,0.35)",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.boxShadow =
+              "0 4px 20px rgba(59,130,246,0.5)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.boxShadow =
+              "0 2px 12px rgba(59,130,246,0.35)";
           }}
         >
           <Receipt size={15} />
@@ -226,11 +226,13 @@ export function AppSidebar() {
         {session?.user && (
           <div
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-2"
-            style={{ background: "rgba(255,255,255,0.05)" }}
+            style={{ background: "rgba(255,255,255,0.04)" }}
           >
             <div
               className="h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-              style={{ background: "#1469F8" }}
+              style={{
+                background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+              }}
             >
               {session.user.name?.[0]?.toUpperCase() ||
                 session.user.email?.[0]?.toUpperCase() ||
@@ -238,33 +240,34 @@ export function AppSidebar() {
             </div>
             <div className="flex-1 min-w-0">
               <p
-                className="text-xs font-semibold text-white truncate"
-                style={{ fontFamily: '"Syne", sans-serif' }}
+                className="text-xs font-semibold truncate"
+                style={{ color: "#f8fafc", fontFamily: '"Syne", sans-serif' }}
               >
                 {session.user.name || "User"}
               </p>
               <p
                 className="text-[10px] truncate"
-                style={{ color: "rgba(255,255,255,0.35)" }}
+                style={{ color: "rgba(255,255,255,0.3)" }}
               >
                 {session.user.email}
               </p>
             </div>
+            <Sparkles size={12} style={{ color: "#3b82f6", flexShrink: 0 }} />
           </div>
         )}
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl transition-all text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.35)" }}
+          style={{ color: "rgba(255,255,255,0.3)" }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLElement).style.background =
               "rgba(239,68,68,0.1)";
-            (e.currentTarget as HTMLElement).style.color = "#FCA5A5";
+            (e.currentTarget as HTMLElement).style.color = "#fca5a5";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.background = "transparent";
             (e.currentTarget as HTMLElement).style.color =
-              "rgba(255,255,255,0.35)";
+              "rgba(255,255,255,0.3)";
           }}
         >
           <LogOut size={15} />
@@ -280,7 +283,10 @@ export function AppSidebar() {
       <button
         onClick={() => setMobileOpen(true)}
         className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-xl shadow-lg text-white"
-        style={{ background: "#0A0A0A" }}
+        style={{
+          background: "#111218",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
         aria-label="Open sidebar"
       >
         <Menu size={18} />
@@ -290,7 +296,7 @@ export function AppSidebar() {
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 md:hidden"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}
           onClick={() => setMobileOpen(false)}
         />
       )}

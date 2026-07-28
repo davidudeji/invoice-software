@@ -6,45 +6,88 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 type LucideIcon = ComponentType<SVGProps<SVGSVGElement> & { size?: number; strokeWidth?: number }>;
 
 interface StatCardProps {
-    label: string;
-    value: string;
-    trend?: string;
-    trendUp?: boolean;
-    icon: LucideIcon;
-    color: "primary" | "accent" | "amber" | "rose";
+  label: string;
+  value: string;
+  trend?: string;
+  trendUp?: boolean;
+  icon: LucideIcon;
+  color: "primary" | "accent" | "amber" | "rose";
 }
 
-const colorMap = {
-    primary: "bg-slate-100 text-slate-700",
-    accent: "bg-emerald-100 text-emerald-700",
-    amber: "bg-amber-100 text-amber-600",
-    rose: "bg-rose-100 text-rose-600",
+const iconColorMap = {
+  primary: { bg: "rgba(59,130,246,0.12)",  icon: "#3b82f6" },
+  accent:  { bg: "rgba(16,185,129,0.12)",  icon: "#10b981" },
+  amber:   { bg: "rgba(245,158,11,0.12)",  icon: "#f59e0b" },
+  rose:    { bg: "rgba(239,68,68,0.12)",   icon: "#ef4444" },
 };
 
 export function StatCard({ label, value, trend, trendUp, icon: Icon, color }: StatCardProps) {
-    return (
-        <div className="card bg-white p-6 border-slate-200 group hover:shadow-md transition-all duration-200">
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-lg transition-all duration-300 group-hover:scale-105 ${colorMap[color]}`}>
-                    <Icon size={20} strokeWidth={2.5} />
-                </div>
-                {trend && (
-                    <div className="flex items-center gap-1">
-                        {trendUp ? (
-                            <TrendingUp size={16} className="text-emerald-600" />
-                        ) : (
-                            <TrendingDown size={16} className="text-rose-600" />
-                        )}
-                        <span className={`text-xs font-semibold ${trendUp ? "text-emerald-700" : "text-rose-700"}`}>
-                            {trend}
-                        </span>
-                    </div>
-                )}
-            </div>
-            <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{label}</p>
-                <h3 className="font-display text-3xl font-semibold text-slate-900 tracking-tight">{value}</h3>
-            </div>
+  const { bg: iconBg, icon: iconColor } = iconColorMap[color];
+
+  return (
+    <div
+      className="relative rounded-2xl p-6 overflow-hidden transition-all duration-200 group"
+      style={{
+        background: "#16171e",
+        border: "1px solid rgba(255,255,255,0.07)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.border = "1px solid rgba(255,255,255,0.12)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(0,0,0,0.5)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.border = "1px solid rgba(255,255,255,0.07)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.4)";
+      }}
+    >
+      {/* Ambient glow behind icon */}
+      <div
+        className="absolute -top-6 -right-6 w-24 h-24 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${iconBg} 0%, transparent 70%)` }}
+      />
+
+      <div className="relative flex justify-between items-start mb-4">
+        <div
+          className="p-2.5 rounded-xl transition-all duration-300 group-hover:scale-105"
+          style={{ background: iconBg }}
+        >
+          <Icon size={18} strokeWidth={2} style={{ color: iconColor }} />
         </div>
-    );
+        {trend && (
+          <div
+            className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full"
+            style={
+              trendUp
+                ? { background: "rgba(16,185,129,0.12)", color: "#10b981" }
+                : { background: "rgba(239,68,68,0.12)",  color: "#ef4444" }
+            }
+          >
+            {trendUp
+              ? <TrendingUp size={12} />
+              : <TrendingDown size={12} />
+            }
+            {trend}
+          </div>
+        )}
+      </div>
+
+      <p
+        className="text-xs font-semibold uppercase tracking-wider mb-2"
+        style={{ color: "#475569" }}
+      >
+        {label}
+      </p>
+      <h3
+        className="text-3xl font-semibold tracking-tight"
+        style={{
+          color: "#f8fafc",
+          fontFamily: '"IBM Plex Mono", monospace',
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </h3>
+    </div>
+  );
 }

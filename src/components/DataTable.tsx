@@ -34,8 +34,16 @@ export function DataTable<T>({
     return (
       <div className="w-full h-64 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border border-slate-200 border-t-emerald-500 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">Loading...</p>
+          <div
+            className="animate-spin rounded-full h-8 w-8 mx-auto mb-3"
+            style={{
+              border: "2px solid rgba(255,255,255,0.08)",
+              borderTopColor: "#3b82f6",
+            }}
+          />
+          <p className="text-sm" style={{ color: "#475569" }}>
+            Loading...
+          </p>
         </div>
       </div>
     );
@@ -43,27 +51,33 @@ export function DataTable<T>({
 
   if (!data || data.length === 0) {
     return (
-      <div className="w-full py-12 text-center">
-        <p className="text-sm text-slate-500">{emptyMessage}</p>
+      <div className="w-full py-16 text-center">
+        <p className="text-sm" style={{ color: "#475569" }}>
+          {emptyMessage}
+        </p>
       </div>
     );
   }
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="data-table w-full">
+      <table className="w-full text-sm">
         <thead>
-          <tr>
+          <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
             {columns.map((column) => (
               <th
                 key={String(column.key)}
                 className={cn(
-                  "px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider",
+                  "px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider",
                   compact && "py-2 px-3",
                   column.align === "center" && "text-center",
                   column.align === "right" && "text-right",
                   column.className,
                 )}
+                style={{
+                  color: "#475569",
+                  background: "rgba(255,255,255,0.02)",
+                }}
               >
                 {column.label}
               </th>
@@ -75,10 +89,18 @@ export function DataTable<T>({
             <tr
               key={String(item[rowKey])}
               className={cn(
-                "border-b border-slate-100 transition-colors hover:bg-slate-50",
+                "transition-colors",
                 onRowClick && "cursor-pointer",
               )}
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
               onClick={() => onRowClick?.(item)}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background =
+                  "rgba(59,130,246,0.04)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+              }}
             >
               {columns.map((column) => {
                 const value = item[column.key];
@@ -90,12 +112,13 @@ export function DataTable<T>({
                   <td
                     key={String(column.key)}
                     className={cn(
-                      "px-4 py-3.5 text-sm text-slate-900",
+                      "px-4 py-3.5",
                       compact && "py-2 px-3",
                       column.align === "center" && "text-center",
                       column.align === "right" && "text-right",
                       column.className,
                     )}
+                    style={{ color: "#94a3b8" }}
                   >
                     {rendered}
                   </td>

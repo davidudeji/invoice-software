@@ -13,6 +13,7 @@ import {
   TrendingDown,
   BarChart3,
   Plus,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -32,8 +33,8 @@ export default async function DashboardPage() {
         maximumFractionDigits: 2,
       })}`,
       icon: DollarSign,
-      bg: "#0A0A0A",
-      accent: "#1469F8",
+      iconBg: "rgba(59,130,246,0.12)",
+      iconColor: "#3b82f6",
       trend: "+18.2%",
       trendUp: true,
       sub: "All time",
@@ -42,8 +43,8 @@ export default async function DashboardPage() {
       label: "Paid Invoices",
       value: stats.paidCount.toString(),
       icon: FileCheck,
-      bg: "#1469F8",
-      accent: "#fff",
+      iconBg: "rgba(16,185,129,0.12)",
+      iconColor: "#10b981",
       trend: "+23.7%",
       trendUp: true,
       sub: "Total completed",
@@ -55,48 +56,50 @@ export default async function DashboardPage() {
         maximumFractionDigits: 2,
       })}`,
       icon: Clock,
-      bg: "#fff",
-      accent: "#F59E0B",
+      iconBg: "rgba(245,158,11,0.12)",
+      iconColor: "#f59e0b",
       trend: "+12.5%",
       trendUp: true,
       sub: "Awaiting payment",
-      dark: false,
     },
     {
       label: "Overdue",
       value: stats.overdueCount.toString(),
       icon: AlertTriangle,
-      bg: "#fff",
-      accent: "#EF4444",
+      iconBg: "rgba(239,68,68,0.12)",
+      iconColor: "#ef4444",
       trend: "+8.7%",
       trendUp: false,
       sub: "Needs attention",
-      dark: false,
     },
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: "#F8FAFC", fontFamily: '"Inter", sans-serif' }}>
+    <div
+      className="min-h-screen"
+      style={{ background: "#08090e", fontFamily: '"Inter", sans-serif' }}
+    >
       <AppSidebar />
 
       <div className="pl-64">
         <DashboardHeader />
 
         <main className="max-w-[1400px] mx-auto p-8 space-y-8 page-enter">
-          {/* Page Header */}
+
+          {/* ── Page Header ── */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
               <h1
                 className="text-2xl font-bold"
                 style={{
                   fontFamily: '"Syne", sans-serif',
-                  color: "#0A0A0A",
+                  color: "#f8fafc",
                   letterSpacing: "-0.02em",
                 }}
               >
                 Overview
               </h1>
-              <p className="text-sm mt-0.5" style={{ color: "#9CA3AF" }}>
+              <p className="text-sm mt-0.5" style={{ color: "#475569" }}>
                 {new Date().toLocaleDateString("en-US", {
                   weekday: "long",
                   year: "numeric",
@@ -108,12 +111,19 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-2.5">
               <Link
                 href="/clients/new"
-                className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium rounded-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-all"
                 style={{
-                  color: "#374151",
-                  background: "#fff",
-                  border: "1px solid #E5E7EB",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                  color: "#94a3b8",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)";
+                  (e.currentTarget as HTMLElement).style.color = "#f8fafc";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+                  (e.currentTarget as HTMLElement).style.color = "#94a3b8";
                 }}
               >
                 <Plus size={14} />
@@ -121,10 +131,18 @@ export default async function DashboardPage() {
               </Link>
               <Link
                 href="/invoices/new"
-                className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white rounded-lg transition-all"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-full transition-all"
                 style={{
-                  background: "#1469F8",
-                  boxShadow: "0 2px 8px rgba(20,105,248,0.3)",
+                  background: "#3b82f6",
+                  boxShadow: "0 2px 12px rgba(59,130,246,0.35)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "#2563eb";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(59,130,246,0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "#3b82f6";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(59,130,246,0.35)";
                 }}
               >
                 <Plus size={14} />
@@ -133,69 +151,61 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Stat Cards */}
+          {/* ── Stat Cards ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
             {statCards.map((card) => {
               const Icon = card.icon;
-              const isDark = card.bg === "#0A0A0A" || card.bg === "#1469F8";
               return (
                 <div
                   key={card.label}
-                  className="relative rounded-2xl p-6 overflow-hidden"
+                  className="relative rounded-2xl p-6 overflow-hidden group transition-all duration-200"
                   style={{
-                    background: card.bg,
-                    border: isDark ? "none" : "1px solid #E5E7EB",
-                    boxShadow: isDark
-                      ? "0 4px 20px rgba(0,0,0,0.12)"
-                      : "0 1px 3px rgba(0,0,0,0.06)",
+                    background: "#16171e",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.border = "1px solid rgba(255,255,255,0.12)";
+                    (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(0,0,0,0.5)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.border = "1px solid rgba(255,255,255,0.07)";
+                    (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.4)";
                   }}
                 >
-                  <div className="flex items-start justify-between mb-5">
+                  {/* ambient glow */}
+                  <div
+                    className="absolute -top-8 -right-8 w-28 h-28 rounded-full pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle, ${card.iconBg} 0%, transparent 70%)`,
+                    }}
+                  />
+
+                  <div className="relative flex items-start justify-between mb-5">
                     <div
-                      className="h-9 w-9 rounded-xl flex items-center justify-center"
-                      style={{
-                        background: isDark
-                          ? "rgba(255,255,255,0.12)"
-                          : `${card.accent}15`,
-                      }}
+                      className="h-9 w-9 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                      style={{ background: card.iconBg }}
                     >
-                      <Icon
-                        size={17}
-                        style={{ color: isDark ? "#fff" : card.accent }}
-                      />
+                      <Icon size={17} style={{ color: card.iconColor }} />
                     </div>
                     <div
-                      className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                      className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full"
                       style={
                         card.trendUp
-                          ? {
-                              background: isDark
-                                ? "rgba(255,255,255,0.1)"
-                                : "rgba(16,185,129,0.1)",
-                              color: isDark ? "rgba(255,255,255,0.7)" : "#059669",
-                            }
-                          : {
-                              background: isDark
-                                ? "rgba(255,255,255,0.1)"
-                                : "rgba(239,68,68,0.1)",
-                              color: isDark ? "rgba(255,255,255,0.7)" : "#DC2626",
-                            }
+                          ? { background: "rgba(16,185,129,0.12)", color: "#10b981" }
+                          : { background: "rgba(239,68,68,0.12)",  color: "#ef4444" }
                       }
                     >
-                      {card.trendUp ? (
-                        <TrendingUp size={11} />
-                      ) : (
-                        <TrendingDown size={11} />
-                      )}
+                      {card.trendUp
+                        ? <TrendingUp size={11} />
+                        : <TrendingDown size={11} />}
                       {card.trend}
                     </div>
                   </div>
 
                   <p
                     className="text-xs font-medium uppercase tracking-wider mb-1.5"
-                    style={{
-                      color: isDark ? "rgba(255,255,255,0.5)" : "#9CA3AF",
-                    }}
+                    style={{ color: "#475569" }}
                   >
                     {card.label}
                   </p>
@@ -203,18 +213,13 @@ export default async function DashboardPage() {
                     className="text-3xl font-bold tracking-tight"
                     style={{
                       fontFamily: '"IBM Plex Mono", monospace',
-                      color: isDark ? "#fff" : "#0A0A0A",
+                      color: "#f8fafc",
                       letterSpacing: "-0.02em",
                     }}
                   >
                     {card.value}
                   </p>
-                  <p
-                    className="text-xs mt-1"
-                    style={{
-                      color: isDark ? "rgba(255,255,255,0.35)" : "#D1D5DB",
-                    }}
-                  >
+                  <p className="text-xs mt-1" style={{ color: "#334155" }}>
                     {card.sub}
                   </p>
                 </div>
@@ -222,36 +227,43 @@ export default async function DashboardPage() {
             })}
           </div>
 
-          {/* Main Grid */}
+          {/* ── Main Grid ── */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
             {/* Revenue Chart */}
             <div
               className="xl:col-span-2 rounded-2xl p-6"
               style={{
-                background: "#fff",
-                border: "1px solid #E5E7EB",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                background: "#16171e",
+                border: "1px solid rgba(255,255,255,0.07)",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
               }}
             >
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2
                     className="text-base font-semibold"
-                    style={{ fontFamily: '"Syne", sans-serif', color: "#0A0A0A" }}
+                    style={{ fontFamily: '"Syne", sans-serif', color: "#f8fafc" }}
                   >
                     Revenue Overview
                   </h2>
-                  <p className="text-sm mt-0.5" style={{ color: "#9CA3AF" }}>
+                  <p className="text-sm mt-0.5" style={{ color: "#475569" }}>
                     Monthly revenue trend — current year
                   </p>
                 </div>
                 <Link
                   href="/reports"
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-all"
                   style={{
-                    color: "#1469F8",
-                    background: "rgba(20,105,248,0.06)",
-                    border: "1px solid rgba(20,105,248,0.12)",
+                    color: "#3b82f6",
+                    background: "rgba(59,130,246,0.10)",
+                    border: "1px solid rgba(59,130,246,0.18)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.16)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(59,130,246,0.10)";
                   }}
                 >
                   <BarChart3 size={13} />
@@ -267,14 +279,14 @@ export default async function DashboardPage() {
               <div
                 className="rounded-2xl p-6"
                 style={{
-                  background: "#fff",
-                  border: "1px solid #E5E7EB",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                  background: "#16171e",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
                 }}
               >
                 <h2
                   className="text-base font-semibold mb-4"
-                  style={{ fontFamily: '"Syne", sans-serif', color: "#0A0A0A" }}
+                  style={{ fontFamily: '"Syne", sans-serif', color: "#f8fafc" }}
                 >
                   Quick Actions
                 </h2>
@@ -290,52 +302,65 @@ export default async function DashboardPage() {
                       key={action.href}
                       href={action.href}
                       className="flex items-center justify-between p-3 rounded-xl transition-all group"
-                      style={{ color: "#374151" }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLElement).style.background =
-                          "rgba(20,105,248,0.04)";
+                          "rgba(59,130,246,0.06)";
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.background =
-                          "transparent";
+                        (e.currentTarget as HTMLElement).style.background = "transparent";
                       }}
                     >
                       <div>
-                        <p className="text-sm font-medium" style={{ color: "#0A0A0A" }}>
+                        <p className="text-sm font-medium" style={{ color: "#f8fafc" }}>
                           {action.label}
                         </p>
-                        <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                        <p className="text-xs" style={{ color: "#475569" }}>
                           {action.desc}
                         </p>
                       </div>
                       <ArrowRight
                         size={14}
                         className="transition-transform group-hover:translate-x-0.5"
-                        style={{ color: "#D1D5DB" }}
+                        style={{ color: "#334155" }}
                       />
                     </Link>
                   ))}
                 </div>
               </div>
 
-              {/* Intelligence CTA */}
+              {/* Intelligence CTA — Velora-style dark card with blue glow */}
               <div
                 className="relative rounded-2xl p-6 overflow-hidden"
-                style={{ background: "#0A0A0A" }}
+                style={{
+                  background: "#0d1117",
+                  border: "1px solid rgba(59,130,246,0.2)",
+                  boxShadow: "0 0 32px rgba(59,130,246,0.08)",
+                }}
               >
+                {/* Dot-grid background */}
                 <div
-                  className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+                  className="absolute inset-0 pointer-events-none"
                   style={{
-                    background:
-                      "radial-gradient(circle, rgba(20,105,248,0.3) 0%, transparent 70%)",
+                    backgroundImage:
+                      "radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)",
+                    backgroundSize: "24px 24px",
                   }}
                 />
+                {/* Blue ambient glow */}
+                <div
+                  className="absolute -top-10 -right-10 w-36 h-36 rounded-full pointer-events-none"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)",
+                  }}
+                />
+
                 <div className="relative">
                   <div
                     className="h-9 w-9 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: "rgba(20,105,248,0.2)" }}
+                    style={{ background: "rgba(59,130,246,0.15)" }}
                   >
-                    <TrendingUp size={17} style={{ color: "#1469F8" }} />
+                    <Zap size={17} style={{ color: "#3b82f6" }} />
                   </div>
                   <h3
                     className="font-bold text-white text-base mb-1"
@@ -343,13 +368,24 @@ export default async function DashboardPage() {
                   >
                     Business Intelligence
                   </h3>
-                  <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    Executive summary of your business health, powered by Gemini.
+                  <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Executive summary of your business health, powered by Gemini AI.
                   </p>
                   <Link
                     href="/reports"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-lg transition-all"
-                    style={{ background: "#1469F8" }}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-full transition-all"
+                    style={{
+                      background: "#3b82f6",
+                      boxShadow: "0 2px 12px rgba(59,130,246,0.35)",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "#2563eb";
+                      (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(59,130,246,0.5)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "#3b82f6";
+                      (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(59,130,246,0.35)";
+                    }}
                   >
                     Generate Report <ArrowRight size={13} />
                   </Link>
@@ -358,7 +394,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Recent Invoices */}
+          {/* ── Recent Invoices ── */}
           <RecentInvoicesWidget />
         </main>
       </div>

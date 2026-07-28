@@ -20,27 +20,34 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center gap-2 font-semibold transition-colors duration-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 rounded-full disabled:opacity-40 disabled:cursor-not-allowed select-none";
 
   const variants = {
-    primary: "bg-[#0A0A0A] text-white hover:bg-[#1F1F23] active:bg-black focus-visible:ring-2 focus-visible:ring-[#1469F8]",
+    primary:
+      "text-[#f8fafc] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.18)] hover:bg-[rgba(255,255,255,0.07)]",
     accent:
-      "bg-[#1469F8] text-white hover:bg-[#0B44C2] active:bg-[#083AB0] shadow-[0_2px_8px_rgba(20,105,248,0.3)] focus-visible:ring-2 focus-visible:ring-[#1469F8]",
+      "bg-[#3b82f6] text-white shadow-[0_2px_12px_rgba(59,130,246,0.35)] hover:bg-[#2563eb] hover:shadow-[0_4px_20px_rgba(59,130,246,0.5)] active:bg-[#1d4ed8]",
     secondary:
-      "bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300",
-    ghost: "text-slate-600 hover:bg-slate-100 active:bg-slate-200",
+      "bg-[rgba(255,255,255,0.06)] text-[#94a3b8] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.09)] hover:text-[#f8fafc]",
+    ghost:
+      "text-[#94a3b8] hover:bg-[rgba(255,255,255,0.05)] hover:text-[#f8fafc]",
   };
 
   const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2.5 text-sm",
-    lg: "px-6 py-3 text-base",
+    sm: "px-3.5 py-1.5 text-xs",
+    md: "px-5 py-2.5 text-sm",
+    lg: "px-7 py-3 text-base",
   };
 
   return (
     <button
       disabled={disabled || isLoading}
       className={cn(baseStyles, variants[variant], sizes[size], className)}
+      style={
+        variant === "primary"
+          ? { background: "rgba(255,255,255,0.05)" }
+          : undefined
+      }
       {...props}
     >
       {isLoading ? (
