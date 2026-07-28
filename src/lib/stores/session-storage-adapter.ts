@@ -1,7 +1,7 @@
-import type { StateStorage } from 'zustand/middleware';
+import { createJSONStorage } from 'zustand/middleware';
 
 /**
- * A Zustand `StateStorage` adapter that wraps `sessionStorage`.
+ * A Zustand `PersistStorage` adapter that wraps `sessionStorage`.
  *
  * Safe for Next.js SSR: all methods are no-ops when `window` is not defined
  * (server-side rendering, edge runtime, etc.). This prevents the infamous
@@ -20,7 +20,12 @@ function isClient(): boolean {
   return typeof window !== 'undefined';
 }
 
-export const sessionStorageAdapter: StateStorage = {
+/**
+ * SSR-safe raw StateStorage that reads/writes sessionStorage.
+ * We feed this into `createJSONStorage` so that Zustand's persist
+ * middleware gets a properly-typed `PersistStorage<unknown>` back.
+ */
+const rawSessionStorage = {
   getItem(key: string): string | null {
     if (!isClient()) return null;
     try {
@@ -49,3 +54,9 @@ export const sessionStorageAdapter: StateStorage = {
     }
   },
 };
+
+/**
+ * Ready-to-use PersistStorage adapter for Zustand's `persist` middleware.
+ * Wraps the raw sessionStorage in `createJSONStorage` so the types align.
+ */
+export const sessionStorageAdapter = createJSONStorage(() => rawSessionStorage);
